@@ -115,6 +115,10 @@
     padding: 8px 10px 2px;
   }
   .food-panel.open { display: block; }
+  .fs-item { margin: 0 0 10px; line-height: 1.4; }
+  .fs-item b { font-size: 0.9rem; }
+  .fs-desc { font-size: 0.82rem; color: #555; margin: 1px 0 2px; }
+  .fs-note { font-size: 0.75rem; color: #888; margin-top: 4px; }
 
   .custom-group h2.collapsible-header {
     display: flex;
@@ -352,7 +356,7 @@
 <div class="info-badge-wrap">
   <button class="info-badge" id="info-badge-btn" title="Informazioni">!</button>
   <div class="info-tooltip" id="info-tooltip">
-    📍 La mappa qui sotto richiede connessione internet per caricare le tile e per cercare nuovi indirizzi. La lista con i link a Google Maps funziona sempre, anche senza connessione. I luoghi che aggiungi restano salvati su questo dispositivo/browser anche se chiudi la pagina.
+    📍 La mappa qui sotto richiede connessione internet per caricare le tile e per cercare nuovi indirizzi. La lista con i link a Google Maps funziona sempre, anche senza connessione. I luoghi che aggiungi restano salvati su questo dispositivo/browser anche se chiudi la pagina. I voti dei locali (TA = Tripadvisor, G = Google) sono stati rilevati a settembre 2026: verifica sempre gli orari.
   </div>
 </div>
 
@@ -414,124 +418,421 @@ const BASE = { name: "Base — San Martino delle Scale (Via Valle Paradiso)", la
 
 const days = [
   {
-    title: "Lun 5 ott — Arrivo, Palermo centro e Mercato del Capo",
-    meta: "✈️ Atterraggio 10:30 (volo W46612), ritiro auto e poi dritti in centro a Palermo. La sera si sale alla base: San Martino delle Scale (Via Valle Paradiso).",
-    stops: [
-      { name: "Aeroporto di Palermo Punta Raisi (arrivo e ritiro auto)", lat: 38.176, lng: 13.091, notes: "Atterraggio 10:30. Shuttle gratuito Differental: uscire dal piano Partenze e chiamare +39 02 6666 5564. Orario di ritiro sul voucher 10:00: da riconfermare con l'agenzia. Palermo centro a circa 35 km (stima)",
-        parking: "Al ritiro servono carta di credito di Massimo Oliva (Visa/Mastercard, no debit né prepagata), carta d'identità e patente in originale." },
-      { name: "Palermo centro (Quattro Canti)", lat: 38.1157, lng: 13.3615, notes: "Dall'aeroporto circa 35 km, 35-40 min (stima). Dal centro alla base ~20 km, 25-30 min in auto",
-        parking: "Garage Magione (Via Magione) o area scoperta di Piazza Magione, coperti/scoperti a pagamento vicino al centro. In ottobre, fuori stagione, si trova spesso posto libero su strada nelle vie limitrofe.",
-        food: "Mercato di Ballarò — street food: pane e panelle, panelle e crocché, arancine, sfincione (8-12€/persona).",
-        foodSpots: [
-          { name: "Mercato di Ballarò", address: "Piazza Ballarò, Palermo" },
-          { name: "Antica Focacceria San Francesco", address: "Via Alessandro Paternostro 58, Palermo" }
-        ] },
-      { name: "Mercato del Capo", lat: 38.1207, lng: 13.3465, notes: "A circa 1,5 km dai Quattro Canti, si raggiunge a piedi. Spostato qui da domenica 11, quando non c'è tempo prima del volo",
-        parking: "Parcheggio Via Lagumina Fratelli o strisce blu nelle vie limitrofe al mercato del Capo, tariffa oraria contenuta.",
-        food: "Street food al Mercato del Capo (5-8€/persona). Se preferisci un solo mercato, scegli tra Ballarò e il Capo.",
-        foodSpots: [
-          { name: "Mercato del Capo", address: "Via Sant'Agostino, Palermo" }
-        ] },
+    "title": "Lun 5 ott — Arrivo, Palermo centro e Mercato del Capo",
+    "meta": "✈️ Atterraggio 10:30 (volo W46612), ritiro auto e poi dritti in centro a Palermo. La sera si sale alla base: San Martino delle Scale (Via Valle Paradiso).",
+    "stops": [
+      {
+        "name": "Aeroporto di Palermo Punta Raisi (arrivo e ritiro auto)",
+        "lat": 38.176,
+        "lng": 13.091,
+        "notes": "Atterraggio 10:30. Shuttle gratuito Differental: uscire dal piano Partenze e chiamare +39 02 6666 5564. Orario di ritiro sul voucher 10:00: da riconfermare con l'agenzia. Palermo centro a circa 35 km (stima)",
+        "parking": "Al ritiro servono carta di credito di Massimo Oliva (Visa/Mastercard, no debit né prepagata), carta d'identità e patente in originale."
+      },
+      {
+        "name": "Palermo centro (Quattro Canti)",
+        "lat": 38.1157,
+        "lng": 13.3615,
+        "notes": "Dall'aeroporto circa 35 km, 35-40 min (stima). Dal centro alla base ~20 km, 25-30 min in auto",
+        "parking": "Garage Magione (Via Magione) o area scoperta di Piazza Magione, coperti/scoperti a pagamento vicino al centro. In ottobre, fuori stagione, si trova spesso posto libero su strada nelle vie limitrofe.",
+        "food": "Street food nel centro storico: pane e panelle, crocché, arancine, sfincione, pani ca' meusa. Di solito 2-4 € a pezzo: un pasto completo sta sotto i 10 €.",
+        "foodSpots": [
+          {
+            "name": "Mercato di Ballarò",
+            "address": "Piazza Ballarò, Palermo",
+            "desc": "Il mercato più verace: pane e panelle, crocché, arancine, sfincione. Meglio la mattina."
+          },
+          {
+            "name": "Antica Focacceria San Francesco",
+            "address": "Via Alessandro Paternostro 58, Palermo",
+            "desc": "Locale storico dal 1834, famoso per il pani ca' meusa."
+          },
+          {
+            "name": "'Nni Franco U' Vastiddaru",
+            "address": "Via Vittorio Emanuele 102, Palermo",
+            "lat": 38.117886,
+            "lng": 13.367003,
+            "desc": "Piazza Marina: pane e panelle, panino con la milza, fritti a prezzi molto bassi. TA 3,9 (3.400+ recensioni), G 4,1 (6.600+)."
+          },
+          {
+            "name": "Ke Palle - Arancine d'Autore",
+            "address": "Via Maqueda 270, Palermo",
+            "lat": 38.117744,
+            "lng": 13.360079,
+            "desc": "Arancine classiche e creative da asporto. TA 4,2 (4.270+ recensioni)."
+          },
+          {
+            "name": "Sfrigola (Via Maqueda)",
+            "address": "Sfrigola, Via Maqueda, Palermo",
+            "desc": "Arancine: TA 4,6 (20 recensioni, campione piccolo), a pochi passi dai Quattro Canti."
+          },
+          {
+            "name": "Friggitoria Chiluzzo",
+            "address": "Piazza della Kalsa 11, Palermo",
+            "desc": "Pane e panelle indicato dal Gambero Rosso e da altre guide tra i migliori della città."
+          }
+        ]
+      },
+      {
+        "name": "Mercato del Capo",
+        "lat": 38.1207,
+        "lng": 13.3465,
+        "notes": "A circa 1,5 km dai Quattro Canti, si raggiunge a piedi. Spostato qui da domenica 11, quando non c'è tempo prima del volo",
+        "parking": "Parcheggio Via Lagumina Fratelli o strisce blu nelle vie limitrofe al mercato del Capo, tariffa oraria contenuta.",
+        "food": "Mercato del Capo: coppi di pesce fritto, panelle, crocché, arancine, rascatura. Un pasto da strada costa circa 5-12 €. Una guida indica aperto 7-20 (domenica e mercoledì 7-13): verifica sul posto.",
+        "foodSpots": [
+          {
+            "name": "Friggitoria Gastronomia da Arianna (Dainotti's)",
+            "address": "Friggitoria da Arianna, Mercato del Capo, Palermo",
+            "desc": "Nel cuore del mercato: arancine, panelle, crocché, panino con la milza, circa 12 € a testa. Recensioni Tripadvisor molto positive (2022-2023)."
+          },
+          {
+            "name": "Banchetto della frittola (Piazza Beati Paoli)",
+            "address": "Piazza Beati Paoli, Palermo",
+            "desc": "All'uscita del mercato: frittola, solo per chi ama le interiora. Lì accanto un chiosco fa 'l'Autista', la bibita digestiva locale."
+          },
+          {
+            "name": "Trattoria Supra i Mura",
+            "address": "Trattoria Supra i Mura, Palermo",
+            "desc": "Cucina locale e pesce fresco, frequentata da chi lavora al mercato (consiglio di Dissapore)."
+          }
+        ]
+      },
       BASE
     ]
   },
   {
-    title: "Mar 6 ott — Monreale + Mondello",
-    stops: [
+    "title": "Mar 6 ott — Monreale + Mondello",
+    "stops": [
       BASE,
-      { name: "Monreale centro", lat: 38.0807591, lng: 13.28809, notes: "~5 km dalla base, 10 min in auto",
-        parking: "Parcheggio libero lungo Via Roma e nelle vie adiacenti alla salita del centro storico; in bassa stagione facile trovare posto gratuito.",
-        food: "Forni e pasticcerie nel centro di Monreale per cannoli e dolci di mandorla — nessun locale specifico segnalato, basta seguire l'odore di forno appena sfornato nelle vie del corso.",
-        foodSpots: [
-          { name: "Centro storico di Monreale (Corso Umberto I / Via Roma)", address: "Corso Umberto I, Monreale" }
-        ] },
-      { name: "Mondello Beach", lat: 38.2000633, lng: 13.3285893, notes: "~25 km dalla base, 35 min in auto",
-        parking: "Parcheggi pubblici a pagamento (indicativamente ~1,50€/h, es. Piazzale Ungheria; in alcune aree le prime 2h possono essere gratuite: controlla i cartelli sul posto), oppure parcheggi privati come Parking Oleandri o Parking Mondello (~5€/giorno). Meglio arrivare presto.",
-        food: "Chioschi sul lungomare di Mondello — panelle, crocché, frittura di paranza (10-15€/persona).",
-        foodSpots: [
-          { name: "Lungomare di Mondello (viale Regina Elena)", address: "Viale Regina Elena, Mondello, Palermo" }
-        ] },
+      {
+        "name": "Monreale centro",
+        "lat": 38.0807591,
+        "lng": 13.28809,
+        "notes": "~5 km dalla base, 10 min in auto",
+        "parking": "Parcheggio libero lungo Via Roma e nelle vie adiacenti alla salita del centro storico; in bassa stagione facile trovare posto gratuito.",
+        "food": "Forni e locali del centro: pane cunzato, sfincione, arancine e panelle a prezzi bassi.",
+        "foodSpots": [
+          {
+            "name": "La Bodeguita dei Sapori",
+            "address": "Via Roma 85, Monreale",
+            "desc": "Panini e insalate fresche, salumi e formaggi, porzioni generose, anche da asporto. G 4,8 (480+), TA 4,8 (250+)."
+          },
+          {
+            "name": "Forno Litria",
+            "address": "Via Odigitria 39, Monreale",
+            "desc": "Forno storico a conduzione familiare: sfincione, focaccia con patate, pane cunzato, reginelle. G 4,8 (290+), TA 4,8 (60+)."
+          },
+          {
+            "name": "Trattoria Fuori Orario",
+            "address": "Via B. d'Acquisto 22, Monreale",
+            "desc": "Trattoria economica con piatti locali. G 4,5 (270+), TA 4,4 (240+). Verifica il giorno di chiusura."
+          }
+        ]
+      },
+      {
+        "name": "Mondello Beach",
+        "lat": 38.2000633,
+        "lng": 13.3285893,
+        "notes": "~25 km dalla base, 35 min in auto",
+        "parking": "Parcheggi pubblici a pagamento (indicativamente ~1,50€/h, es. Piazzale Ungheria; in alcune aree le prime 2h possono essere gratuite: controlla i cartelli sul posto), oppure parcheggi privati come Parking Oleandri o Parking Mondello (~5€/giorno). Meglio arrivare presto.",
+        "food": "Chioschi e friggitorie in piazza e sul lungomare: panelle, crocché, arancine, coppo di pesce fritto (3-10 € a pezzo).",
+        "foodSpots": [
+          {
+            "name": "L'angolo di Mondello (da Franco)",
+            "address": "Piazza Mondello 20, Mondello, Palermo",
+            "desc": "Finestra sulla piazza: coppo di pesce fritto (circa 9 €), panelle e crocché (circa 3 €). Pochi posti, si mangia in piedi. TA 4,3 (840+)."
+          },
+          {
+            "name": "Roxy RistoFriggitoria Panineria",
+            "address": "Piazza Mondello 27, Mondello, Palermo",
+            "lat": 38.208004,
+            "lng": 13.32684,
+            "desc": "Street food palermitano, da asporto o al tavolo: panelle, crocché, arancine, pani ca' meusa, fritture. Recensioni Tripadvisor positive nel 2026."
+          },
+          {
+            "name": "Touring Cafè Beach",
+            "address": "Viale Regina Elena 17, Mondello, Palermo",
+            "desc": "Rosticceria aperta dalla mattina: 'Arancina Bomba' al ragù, circa 4,50 €."
+          },
+          {
+            "name": "Piccolo Forno La Barbera",
+            "address": "Via degli Oleandri 20, Mondello, Palermo",
+            "lat": 38.19804,
+            "lng": 13.33014,
+            "desc": "Forno di quartiere per pizza al taglio e rosticceria. TA 4,5 (38 recensioni)."
+          }
+        ]
+      },
       BASE
     ]
   },
   {
-    title: "Mer 7 ott — Cefalù",
-    stops: [
+    "title": "Mer 7 ott — Cefalù",
+    "stops": [
       BASE,
-      { name: "Cefalù centro storico", lat: 38.034991, lng: 14.0213259, notes: "~75 km, 1h10 in auto. Alternativa: treno da Palermo Centrale, 55 min, ~7€",
-        parking: "Parcheggio gratuito zona 'Dietro Castello' (con bus navetta per il centro) oppure parcheggio gratuito vicino Piazza delle Vittime (stazione). Il Lungomare Giardina è a pagamento (~6€/giorno).",
-        food: "Forni e chioschi del centro storico — pane cunzato, dolci di mandorla, pesce fritto da asporto vicino al porticciolo (10-15€/persona).",
-        foodSpots: [
-          { name: "Centro storico / porticciolo di Cefalù", address: "Corso Ruggero, Cefalù" }
-        ] },
+      {
+        "name": "Cefalù centro storico",
+        "lat": 38.034991,
+        "lng": 14.0213259,
+        "notes": "~75 km, 1h10 in auto. Alternativa: treno da Palermo Centrale, 55 min, ~7€",
+        "parking": "Parcheggio gratuito zona 'Dietro Castello' (con bus navetta per il centro) oppure parcheggio gratuito vicino Piazza delle Vittime (stazione). Il Lungomare Giardina è a pagamento (~6€/giorno).",
+        "food": "Rosticcerie e chioschi del centro: arancine, sfincione, pane cunzatu, pesce fritto da asporto (10-15 €/persona).",
+        "foodSpots": [
+          {
+            "name": "Sfrigola Cefalù",
+            "address": "Sfrigola, Corso Ruggero, Cefalù",
+            "desc": "Arancine e rosticceria in Corso Ruggero, segnalata dalla Guida Street Food del Gambero Rosso. TA 4,6 (86)."
+          },
+          {
+            "name": "Cafoodda",
+            "address": "Piazza del Duomo 20, Cefalù",
+            "lat": 38.039536,
+            "lng": 14.022147,
+            "desc": "Street food siciliano in piazza Duomo. TA 4,8 (40+)."
+          },
+          {
+            "name": "Al Gallo d'Oro",
+            "address": "Via Antonio Gramsci 51, Cefalù",
+            "lat": 38.032734,
+            "lng": 14.016563,
+            "desc": "Colazione e rosticceria vicino alla stazione, comodo se lasci l'auto lì. TA 4,6 (74)."
+          },
+          {
+            "name": "La Cefalù Nostrana",
+            "address": "La Cefalù Nostrana, Cefalù",
+            "desc": "Gastronomia del centro, la più votata della sua categoria. TA 4,9 (60-70 recensioni)."
+          },
+          {
+            "name": "Antica Focacceria Sapori Siciliani",
+            "address": "Antica Focacceria Sapori Siciliani, Cefalù",
+            "desc": "Focacce e rosticceria, fascia economica. TA 4,4 (290+)."
+          }
+        ]
+      },
       BASE
     ]
   },
   {
-    title: "Gio 8 ott — Riserva dello Zingaro + San Vito Lo Capo",
-    stops: [
+    "title": "Gio 8 ott — Riserva dello Zingaro + San Vito Lo Capo",
+    "stops": [
       BASE,
-      { name: "Riserva Naturale dello Zingaro", lat: 38.1223635, lng: 12.7850634, notes: "~110 km, 1h40 in auto. Giornata lunga: con San Vito Lo Capo sono oltre 3h30 di sola guida tra andata e ritorno, meglio partire presto",
-        parking: "Parcheggio a pagamento presso i due ingressi (Scopello a sud, San Vito Lo Capo a nord), qualche euro per l'intera giornata.",
-        food: "Punto ristoro/bar vicino all'ingresso Scopello per uno spuntino veloce." },
-      { name: "San Vito Lo Capo", lat: 38.1759419, lng: 12.7335733, notes: "~120 km, 1h50 in auto",
-        parking: "Parcheggi a pagamento lungo Via Savoia e nelle vie retrostanti la spiaggia; in bassa stagione si trova posto gratuito su strada più lontano dal centro.",
-        food: "Ristorantino Crik & Crok — cous cous di pesce, ottimo rapporto qualità-prezzo, molto amato dai locali (15-20€/persona).",
-        foodSpots: [
-          { name: "Ristorantino Crik & Crok", address: "Via Regina Margherita 99, San Vito Lo Capo" }
-        ] },
+      {
+        "name": "Riserva Naturale dello Zingaro",
+        "lat": 38.1223635,
+        "lng": 12.7850634,
+        "notes": "~110 km, 1h40 in auto. Giornata lunga: con San Vito Lo Capo sono oltre 3h30 di sola guida tra andata e ritorno, meglio partire presto",
+        "parking": "Parcheggio a pagamento presso i due ingressi (Scopello a sud, San Vito Lo Capo a nord), qualche euro per l'intera giornata.",
+        "food": "Per lo spuntino usa Scopello, il borgo vicino all'ingresso sud. Dentro la riserva ci sono aree picnic lungo i sentieri: pranzo al sacco e acqua.",
+        "foodSpots": [
+          {
+            "name": "Panificio di Stabile e Anselmo (Scopello)",
+            "address": "Panificio Stabile e Anselmo, Scopello",
+            "desc": "Pane cunzato, sfincione, pizze al taglio e fritti siciliani, tra i più citati della zona. TA 4,2 (1.450), fascia €."
+          },
+          {
+            "name": "Bar Pasticceria Scopello",
+            "address": "Via Armando Diaz 11, Scopello",
+            "lat": 38.07065,
+            "lng": 12.817874,
+            "desc": "Panini, focacce, pizze e gelati, comodo per partire o rientrare. TA 4,1 (510), fascia €."
+          },
+          {
+            "name": "Ristorante Bar Nettuno",
+            "address": "Baglio Isonzo 13, Scopello",
+            "lat": 38.070168,
+            "lng": 12.818498,
+            "desc": "Piazzetta di Scopello, per un pasto seduto: pesce e carne, circa 20-35 €. TA 4,5 (1.750+)."
+          }
+        ]
+      },
+      {
+        "name": "San Vito Lo Capo",
+        "lat": 38.1759419,
+        "lng": 12.7335733,
+        "notes": "~120 km, 1h50 in auto",
+        "parking": "Parcheggi a pagamento lungo Via Savoia e nelle vie retrostanti la spiaggia; in bassa stagione si trova posto gratuito su strada più lontano dal centro.",
+        "food": "Cous cous (la specialità del posto), arancine e panelle: le alternative economiche stanno fuori dai ristoranti sul corso.",
+        "foodSpots": [
+          {
+            "name": "Ristorantino Crik & Crok",
+            "address": "Via Regina Margherita 99, San Vito Lo Capo",
+            "desc": "Cous cous di pesce, 15-20 €/persona. TA 4,1 (2.600)."
+          },
+          {
+            "name": "Il Giardino di Gnà Sara",
+            "address": "Il Giardino di Gnà Sara, San Vito Lo Capo",
+            "desc": "Trattoria familiare fuori dal caos: busiate e cous cous, prezzi più bassi dei locali vicino ai negozi. TA 4,0 (3.850+)."
+          },
+          {
+            "name": "L'Uomo Ragno",
+            "address": "L'Uomo Ragno rosticceria, San Vito Lo Capo",
+            "desc": "Rosticceria: secondo più guide ha i migliori arancini di San Vito, in tanti gusti."
+          },
+          {
+            "name": "Pizze e Delizie",
+            "address": "Pizze e Delizie, San Vito Lo Capo",
+            "desc": "Cous cous, arancine e panini con panelle a prezzo onesto (tra i migliori pasti economici della lista Wanderlog)."
+          }
+        ]
+      },
       BASE
     ]
   },
   {
-    title: "Ven 9 ott — Erice + Trapani + Saline",
-    stops: [
+    "title": "Ven 9 ott — Erice + Trapani + Saline",
+    "stops": [
       BASE,
-      { name: "Erice (Porta Trapani)", lat: 38.0361508, lng: 12.5835271, notes: "~100 km, 1h20-1h30 in auto",
-        parking: "Parcheggio a pagamento vicino Porta Trapani e lungo Viale Conte Pepoli; in bassa stagione/orari mattutini spesso libero. Attenzione ai parcheggiatori abusivi nelle zone periferiche di Trapani vicino alla funivia.",
-        food: "Maria Grammatico — pasticceria storica per le famose genovesi (dolci alla mandorla) (5-10€/persona).",
-        foodSpots: [
-          { name: "Maria Grammatico", address: "Via Vittorio Emanuele 14, Erice" }
-        ] },
-      { name: "Trapani centro", lat: 38.0174282, lng: 12.5364464, notes: "Saline nei dintorni",
-        parking: "Parcheggio Via Capua (vicino stazione funivia) o Piazza Sant'Agostino, entrambi a pagamento a tariffa oraria contenuta.",
-        food: "Osteria La Bettolaccia — busiate al pesto trapanese e cous cous di pesce, un po' più curato (25-35€/persona).",
-        foodSpots: [
-          { name: "Osteria La Bettolaccia", address: "Via Generale Enrico Fardella 23, Trapani" }
-        ] },
+      {
+        "name": "Erice (Porta Trapani)",
+        "lat": 38.0361508,
+        "lng": 12.5835271,
+        "notes": "~100 km, 1h20-1h30 in auto",
+        "parking": "Parcheggio a pagamento vicino Porta Trapani e lungo Viale Conte Pepoli; in bassa stagione/orari mattutini spesso libero. Attenzione ai parcheggiatori abusivi nelle zone periferiche di Trapani vicino alla funivia.",
+        "food": "Arancine, genovesi e panini: in pochi metri trovi friggitorie e pasticcerie storiche (5-10 €/persona).",
+        "foodSpots": [
+          {
+            "name": "La Tonda Fritta",
+            "address": "Via Vittorio Emanuele 100, Erice",
+            "lat": 38.03626,
+            "lng": 12.583587,
+            "desc": "Arancine con oltre 35 gusti, cucinate a vista, vicino a Porta Trapani. TA 4,6 (840+)."
+          },
+          {
+            "name": "Maria Grammatico",
+            "address": "Via Vittorio Emanuele 14, Erice",
+            "desc": "Pasticceria storica: genovesi e dolci di mandorla. Restaurant Guru 4,9 (5.800+)."
+          },
+          {
+            "name": "Pasticceria San Carlo",
+            "address": "Pasticceria San Carlo, Erice",
+            "desc": "Genovesi e dolci tipici. TA 4,7 (790)."
+          },
+          {
+            "name": "Gusto - Il Panino Gourmet",
+            "address": "Gusto Il Panino Gourmet, Erice",
+            "desc": "Panini da asporto. TA 5,0 (23), Restaurant Guru 4,8 (380)."
+          }
+        ]
+      },
+      {
+        "name": "Trapani centro",
+        "lat": 38.0174282,
+        "lng": 12.5364464,
+        "notes": "Saline nei dintorni",
+        "parking": "Parcheggio Via Capua (vicino stazione funivia) o Piazza Sant'Agostino, entrambi a pagamento a tariffa oraria contenuta.",
+        "food": "Rosticcerie e pane cunzato in centro (circa 5 €/persona), poi cous cous alla trapanese e busiate.",
+        "foodSpots": [
+          {
+            "name": "Rosticceria Al Pollero (da Roberto)",
+            "address": "Rosticceria Al Pollero, Via Spalti, Trapani",
+            "desc": "Arancine, panelle e panini da asporto, frequentata dai trapanesi, circa 5 € a persona. TA 4,6 (370)."
+          },
+          {
+            "name": "Sapurito Street Food & Goloserie",
+            "address": "Sapurito Street Food, Trapani",
+            "desc": "Street food nel centro storico, fascia €. TA 4,6 (210)."
+          },
+          {
+            "name": "Trattoria La Golosa",
+            "address": "Trattoria La Golosa, Trapani",
+            "desc": "Busiate, cous cous e fritture in ambiente informale, fascia €. TA 4,5 (810+)."
+          },
+          {
+            "name": "Osteria La Bettolaccia",
+            "address": "Via Generale Enrico Fardella 23, Trapani",
+            "desc": "Più curata: busiate al pesto trapanese e cous cous di pesce, 25-35 €."
+          }
+        ]
+      },
       BASE
     ]
   },
   {
-    title: "Sab 10 ott — Segesta + Castellammare del Golfo",
-    stops: [
+    "title": "Sab 10 ott — Segesta + Castellammare del Golfo",
+    "stops": [
       BASE,
-      { name: "Parco Archeologico di Segesta", lat: 37.9417689, lng: 12.835728, notes: "~75 km, 1h in auto",
-        parking: "Ampio parcheggio gratuito in terra battuta all'ingresso del parco archeologico.",
-        food: "Bar/caffetteria all'interno del parco per una pausa veloce." },
-      { name: "Castellammare del Golfo", lat: 38.0264765, lng: 12.8811764, notes: "~85 km, 1h10 in auto",
-        parking: "Parcheggio libero lungo il porto e le vie del centro, generalmente semplice fuori stagione estiva.",
-        food: "Panifici locali per pane e prodotti da forno; trattorie sul porto per pesce fresco (15-20€/persona).",
-        foodSpots: [
-          { name: "Porto di Castellammare del Golfo", address: "Via del Cristo, Castellammare del Golfo" }
-        ] },
+      {
+        "name": "Parco Archeologico di Segesta",
+        "lat": 37.9417689,
+        "lng": 12.835728,
+        "notes": "~75 km, 1h in auto",
+        "parking": "Ampio parcheggio gratuito in terra battuta all'ingresso del parco archeologico.",
+        "food": "Bar all'ingresso del parco per una pausa veloce; per un pasto vero vai a Calatafimi-Segesta o sulla strada per Castellammare.",
+        "foodSpots": [
+          {
+            "name": "Posto di Ristoro (ingresso del parco)",
+            "address": "Parco Archeologico di Segesta, Calatafimi-Segesta",
+            "desc": "Bar con pizza e cannoli fatti in casa, arancini e dolci; recensioni Tripadvisor positive (anche se datate)."
+          },
+          {
+            "name": "La Locanda di Nonna Ciccia",
+            "address": "Via Alcide De Gasperi 4, Calatafimi-Segesta",
+            "lat": 37.91476,
+            "lng": 12.863094,
+            "desc": "Trattoria in paese, anche da asporto. 4,3 (27 recensioni su Sluurpy)."
+          },
+          {
+            "name": "Agriturismo Baglio Pocoroba Segesta",
+            "address": "Contrada Pocoroba 1, Castellammare del Golfo",
+            "desc": "Cucina tipica, spesa media circa 20 €. TheFork 9,3/10 (300+)."
+          }
+        ]
+      },
+      {
+        "name": "Castellammare del Golfo",
+        "lat": 38.0264765,
+        "lng": 12.8811764,
+        "notes": "~85 km, 1h10 in auto",
+        "parking": "Parcheggio libero lungo il porto e le vie del centro, generalmente semplice fuori stagione estiva.",
+        "food": "Frittura di pesce, pane cunzato e arancine da asporto vicino al porto e in centro (15-20 €/persona).",
+        "foodSpots": [
+          {
+            "name": "Nescy - Bistrot Street Food",
+            "address": "Via Discesa Marina 23, Castellammare del Golfo",
+            "desc": "Take away in centro storico, ottima frittura mista di pesce fresco. TA 4,7 (640)."
+          },
+          {
+            "name": "Rollò Trattoria & Gastronomia Siciliana",
+            "address": "Rollò Trattoria e Gastronomia Siciliana, Castellammare del Golfo",
+            "desc": "Pane cunzato, arancini e piatti tipici, aperti anche la domenica a pranzo. TA 4,5 (310), fascia €."
+          },
+          {
+            "name": "La Varcuzza",
+            "address": "La Varcuzza, Castellammare del Golfo",
+            "desc": "Pesce a prezzi contenuti, vista porto. TA 4,7 (260), fascia €."
+          },
+          {
+            "name": "Street Food del Golfo",
+            "address": "Corso Garibaldi 100, Castellammare del Golfo",
+            "lat": 38.025978,
+            "lng": 12.881298,
+            "desc": "Street food in Corso Garibaldi. TA 5,0 (solo 11 recensioni)."
+          }
+        ]
+      },
       BASE
     ]
   },
   {
-    title: "Dom 11 ott — Riconsegna auto e partenza (volo 11:15)",
-    meta: "✈️ Nessuna tappa turistica: volo Palermo → Torino alle 11:15. Consigliato partire dalla base verso le 7:45-8:00 (stima: 40-45 min di strada, rifornimento e riconsegna auto, in aeroporto circa 2 ore prima).",
-    stops: [
+    "title": "Dom 11 ott — Riconsegna auto e partenza (volo 11:15)",
+    "meta": "✈️ Nessuna tappa turistica: volo Palermo → Torino alle 11:15. Consigliato partire dalla base verso le 7:45-8:00 (stima: 40-45 min di strada, rifornimento e riconsegna auto, in aeroporto circa 2 ore prima).",
+    "stops": [
       BASE,
-      { name: "Aeroporto di Palermo Punta Raisi (riconsegna auto e volo)", lat: 38.176, lng: 13.091, notes: "Volo W46611 alle 11:15, arrivo a Torino-Caselle 13:05. In aeroporto almeno 2 ore prima (circa 9:15)",
-        parking: "Riconsegna auto Differental col pieno di carburante (rifornire sulla strada verso l'aeroporto). Orario riconsegna sul voucher 10:00, da anticipare: verifica con l'agenzia (fuori orario 100€).",
-        food: "Colazione in alloggio o al bar dell'aeroporto prima del check-in." }
+      {
+        "name": "Aeroporto di Palermo Punta Raisi (riconsegna auto e volo)",
+        "lat": 38.176,
+        "lng": 13.091,
+        "notes": "Volo W46611 alle 11:15, arrivo a Torino-Caselle 13:05. In aeroporto almeno 2 ore prima (circa 9:15)",
+        "parking": "Riconsegna auto Differental col pieno di carburante (rifornire sulla strada verso l'aeroporto). Orario riconsegna sul voucher 10:00, da anticipare: verifica con l'agenzia (fuori orario 100€).",
+        "food": "Colazione in alloggio o al bar dell'aeroporto prima del check-in."
+      }
     ]
   }
 ];
 
 // Render day cards with Google Maps links
 const daysContainer = document.getElementById('days');
+window.__foodSpots = [];
 days.forEach((day, dayIdx) => {
   const card = document.createElement('div');
   card.className = 'day-card';
@@ -544,8 +845,9 @@ days.forEach((day, dayIdx) => {
     if (s.foodSpots) {
       foodSpotsHtml = s.foodSpots.map(fs => {
         const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fs.address)}&travelmode=driving`;
-        return `📍 ${fs.name} — <a href="${dirUrl}" target="_blank">indicazioni ↗</a> · <a href="#" onclick="focusAddressOnMap('${fs.address.replace(/'/g, "\\'")}','${fs.name.replace(/'/g, "\\'")}',this); return false;">👁️ vedi in mappa</a>`;
-      }).join('<br>');
+        const spotIdx = window.__foodSpots.push(fs) - 1;
+        return `<div class="fs-item">📍 <b>${fs.name}</b>${fs.desc ? `<div class="fs-desc">${fs.desc}</div>` : ''}<a href="${dirUrl}" target="_blank">indicazioni ↗</a> · <a href="#" onclick="openFoodSpot(${spotIdx}, this); return false;">👁️ vedi in mappa</a></div>`;
+      }).join('') + `<div class="fs-note">Voti: TA = Tripadvisor, G = Google (rilevati a settembre 2026). Controlla gli orari prima di andare.</div>`;
     }
     const foodId = `food-${dayIdx}-${stopIdx}`;
     const hasFood = s.food || foodSpotsHtml;
@@ -641,13 +943,23 @@ async function focusAddressOnMap(address, label, linkEl) {
     if (coords) {
       showOnMap(coords.lat, coords.lng, `<b>${label}</b><br>${address}`);
     } else {
-      alert('Indirizzo non trovato sulla mappa: ' + address);
+      alert('Non trovo questo punto sulla mappa interna: usa "indicazioni" per aprirlo in Google Maps.');
     }
   } finally {
     linkEl.textContent = originalText;
   }
 }
 window.focusAddressOnMap = focusAddressOnMap;
+function openFoodSpot(i, el) {
+  const fs = window.__foodSpots[i];
+  if (!fs) return;
+  if (typeof fs.lat === 'number' && typeof fs.lng === 'number') {
+    showOnMap(fs.lat, fs.lng, `<b>${fs.name}</b>${fs.desc ? '<br>' + fs.desc : ''}`);
+  } else {
+    focusAddressOnMap(fs.address, fs.name, el);
+  }
+}
+window.openFoodSpot = openFoodSpot;
 window.showOnMap = showOnMap;
 let dayLayers = [];
 try {
