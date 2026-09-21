@@ -1,6 +1,6 @@
 // Service worker: l'app si apre anche senza connessione (le tile della mappa
 // già visualizzate restano in cache; la ricerca di nuovi indirizzi richiede rete).
-const CACHE = 'palermo-itinerario-v1';
+const CACHE = 'palermo-itinerario-v2';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {

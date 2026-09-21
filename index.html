@@ -410,19 +410,27 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const BASE = { name: "Base — San Martino delle Scale (Via Valle Paradiso)", lat: 38.0918857, lng: 13.2565778, notes: "Partenza e ritorno ogni giorno" };
+const BASE = { name: "Base — San Martino delle Scale (Via Valle Paradiso)", lat: 38.0918857, lng: 13.2565778, notes: "Partenza e ritorno giornaliero" };
 
 const days = [
   {
-    title: "Lun 5 ott — Palermo centro (mezza giornata)",
+    title: "Lun 5 ott — Arrivo, Palermo centro e Mercato del Capo",
+    meta: "✈️ Atterraggio 10:30 (volo W46612), ritiro auto e poi dritti in centro a Palermo. La sera si sale alla base: San Martino delle Scale (Via Valle Paradiso).",
     stops: [
-      BASE,
-      { name: "Palermo centro (Quattro Canti)", lat: 38.1157, lng: 13.3615, notes: "~20 km, 25-30 min in auto",
+      { name: "Aeroporto di Palermo Punta Raisi (arrivo e ritiro auto)", lat: 38.176, lng: 13.091, notes: "Atterraggio 10:30. Shuttle gratuito Differental: uscire dal piano Partenze e chiamare +39 02 6666 5564. Orario di ritiro sul voucher 10:00: da riconfermare con l'agenzia. Palermo centro a circa 35 km (stima)",
+        parking: "Al ritiro servono carta di credito di Massimo Oliva (Visa/Mastercard, no debit né prepagata), carta d'identità e patente in originale." },
+      { name: "Palermo centro (Quattro Canti)", lat: 38.1157, lng: 13.3615, notes: "Dall'aeroporto circa 35 km, 35-40 min (stima). Dal centro alla base ~20 km, 25-30 min in auto",
         parking: "Garage Magione (Via Magione) o area scoperta di Piazza Magione, coperti/scoperti a pagamento vicino al centro. In ottobre, fuori stagione, si trova spesso posto libero su strada nelle vie limitrofe.",
         food: "Mercato di Ballarò — street food: pane e panelle, panelle e crocché, arancine, sfincione (8-12€/persona).",
         foodSpots: [
           { name: "Mercato di Ballarò", address: "Piazza Ballarò, Palermo" },
           { name: "Antica Focacceria San Francesco", address: "Via Alessandro Paternostro 58, Palermo" }
+        ] },
+      { name: "Mercato del Capo", lat: 38.1207, lng: 13.3465, notes: "A circa 1,5 km dai Quattro Canti, si raggiunge a piedi. Spostato qui da domenica 11, quando non c'è tempo prima del volo",
+        parking: "Parcheggio Via Lagumina Fratelli o strisce blu nelle vie limitrofe al mercato del Capo, tariffa oraria contenuta.",
+        food: "Street food al Mercato del Capo (5-8€/persona). Se preferisci un solo mercato, scegli tra Ballarò e il Capo.",
+        foodSpots: [
+          { name: "Mercato del Capo", address: "Via Sant'Agostino, Palermo" }
         ] },
       BASE
     ]
@@ -438,7 +446,7 @@ const days = [
           { name: "Centro storico di Monreale (Corso Umberto I / Via Roma)", address: "Corso Umberto I, Monreale" }
         ] },
       { name: "Mondello Beach", lat: 38.2000633, lng: 13.3285893, notes: "~25 km dalla base, 35 min in auto",
-        parking: "Parcheggi pubblici gratuiti per le prime 2h in alcune aree (es. Piazzale Ungheria a pagamento ~1,50€/h dopo), oppure parcheggi privati come Parking Oleandri o Parking Mondello (~5€/giorno). Meglio arrivare presto.",
+        parking: "Parcheggi pubblici a pagamento (indicativamente ~1,50€/h, es. Piazzale Ungheria; in alcune aree le prime 2h possono essere gratuite: controlla i cartelli sul posto), oppure parcheggi privati come Parking Oleandri o Parking Mondello (~5€/giorno). Meglio arrivare presto.",
         food: "Chioschi sul lungomare di Mondello — panelle, crocché, frittura di paranza (10-15€/persona).",
         foodSpots: [
           { name: "Lungomare di Mondello (viale Regina Elena)", address: "Viale Regina Elena, Mondello, Palermo" }
@@ -463,8 +471,8 @@ const days = [
     title: "Gio 8 ott — Riserva dello Zingaro + San Vito Lo Capo",
     stops: [
       BASE,
-      { name: "Riserva Naturale dello Zingaro", lat: 38.1223635, lng: 12.7850634, notes: "~110 km, 1h40 in auto",
-        parking: "Parcheggio a pagamento presso i due ingressi (Scopello nord e San Vito Lo Capo sud), qualche euro per l'intera giornata.",
+      { name: "Riserva Naturale dello Zingaro", lat: 38.1223635, lng: 12.7850634, notes: "~110 km, 1h40 in auto. Giornata lunga: con San Vito Lo Capo sono oltre 3h30 di sola guida tra andata e ritorno, meglio partire presto",
+        parking: "Parcheggio a pagamento presso i due ingressi (Scopello a sud, San Vito Lo Capo a nord), qualche euro per l'intera giornata.",
         food: "Punto ristoro/bar vicino all'ingresso Scopello per uno spuntino veloce." },
       { name: "San Vito Lo Capo", lat: 38.1759419, lng: 12.7335733, notes: "~120 km, 1h50 in auto",
         parking: "Parcheggi a pagamento lungo Via Savoia e nelle vie retrostanti la spiaggia; in bassa stagione si trova posto gratuito su strada più lontano dal centro.",
@@ -511,16 +519,13 @@ const days = [
     ]
   },
   {
-    title: "Dom 11 ott — Palermo e partenza (mezza giornata)",
+    title: "Dom 11 ott — Riconsegna auto e partenza (volo 11:15)",
+    meta: "✈️ Nessuna tappa turistica: volo Palermo → Torino alle 11:15. Consigliato partire dalla base verso le 7:45-8:00 (stima: 40-45 min di strada, rifornimento e riconsegna auto, in aeroporto circa 2 ore prima).",
     stops: [
       BASE,
-      { name: "Palermo (Cappuccini / Mercato Capo)", lat: 38.1207, lng: 13.3465, notes: "~20 km dalla base, 25-30 min in auto",
-        parking: "Parcheggio Via Lagumina Fratelli o strisce blu nelle vie limitrofe al mercato del Capo, tariffa oraria contenuta.",
-        food: "Ultimo giro street food al Mercato del Capo prima della partenza (5-8€/persona).",
-        foodSpots: [
-          { name: "Mercato del Capo", address: "Via Sant'Agostino, Palermo" }
-        ] },
-      BASE
+      { name: "Aeroporto di Palermo Punta Raisi (riconsegna auto e volo)", lat: 38.176, lng: 13.091, notes: "Volo W46611 alle 11:15, arrivo a Torino-Caselle 13:05. In aeroporto almeno 2 ore prima (circa 9:15)",
+        parking: "Riconsegna auto Differental col pieno di carburante (rifornire sulla strada verso l'aeroporto). Orario riconsegna sul voucher 10:00, da anticipare: verifica con l'agenzia (fuori orario 100€).",
+        food: "Colazione in alloggio o al bar dell'aeroporto prima del check-in." }
     ]
   }
 ];
@@ -531,7 +536,7 @@ days.forEach((day, dayIdx) => {
   const card = document.createElement('div');
   card.className = 'day-card';
   card.id = `day-${dayIdx}`;
-  let stopsHtml = `<div class="meta">🏠 Partenza e ritorno: ${BASE.name}</div>`;
+  let stopsHtml = `<div class="meta">${day.meta || ('🏠 Partenza e ritorno: ' + BASE.name)}</div>`;
   day.stops.filter(s => s !== BASE).forEach((s, stopIdx) => {
     const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
     const popupHtml = `<b>${s.name}</b><br>${s.notes}${s.parking ? `<br>🅿️ ${s.parking}` : ''}${s.food ? `<br>🍽️ ${s.food}` : ''}`;
@@ -655,7 +660,7 @@ try {
   const colors = ['#c1502e', '#1a6e8e', '#7a9e3f', '#b8860b', '#8e44ad', '#2c7873', '#c94f4f'];
 
   // Marker fisso unico per la base
-  const baseMarker = L.marker([BASE.lat, BASE.lng]).addTo(map).bindPopup(`<b>🏠 ${BASE.name}</b><br>Partenza e ritorno ogni giorno`);
+  const baseMarker = L.marker([BASE.lat, BASE.lng]).addTo(map).bindPopup(`<b>🏠 ${BASE.name}</b><br>Partenza e ritorno giornaliero (arrivo il 5 e partenza l'11 dall'aeroporto)`);
 
   days.forEach((day, i) => {
     const latlngs = [];
