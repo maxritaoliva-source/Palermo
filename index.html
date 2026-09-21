@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Itinerario Sicilia Occidentale — 5-11 ottobre 2026</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#1a6e8e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root {
+    --sea: #1a6e8e;
+    --sand: #f5efe3;
+    --terracotta: #c1502e;
+    --ink: #2b2320;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--sand);
+    color: var(--ink);
+  }
+  header {
+    background: var(--sea);
+    color: white;
+    padding: 20px 16px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 4px; font-size: 1.3rem; }
+  header p { margin: 0; opacity: 0.9; font-size: 0.9rem; }
+  #map-container {
+    position: sticky;
+    top: 0;
+    z-index: 500;
+    height: 50vh;
+    width: 100%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+  #map { height: 100%; width: 100%; }
+  .info-badge-wrap {
+    text-align: center;
+    padding: 8px 0;
+    position: relative;
+  }
+  .info-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #fff3cd;
+    color: #664d03;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: none;
+    cursor: pointer;
+  }
+  .info-tooltip {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 34px;
+    transform: translateX(-50%);
+    width: min(90vw, 400px);
+    background: #fff3cd;
+    color: #664d03;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    text-align: left;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 700;
+  }
+  .info-tooltip.open { display: block; }
+  .day-card {
+    background: white;
+    margin: 14px 16px;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    border-left: 5px solid var(--terracotta);
+  }
+  .day-card h2 { margin: 0 0 6px; font-size: 1.05rem; color: var(--terracotta); }
+  .day-card .meta { font-size: 0.85rem; color: #555; margin-bottom: 8px; }
+  .stop { margin: 8px 0; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+  .stop:last-child { border-bottom: none; }
+  .stop a { color: var(--sea); text-decoration: none; font-weight: 600; }
+  .stop a:hover { text-decoration: underline; }
+  .stop .notes { font-size: 0.85rem; color: #555; margin-top: 4px; line-height: 1.4; }
+  .food-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: #fdf3ec;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--terracotta);
+    cursor: pointer;
+    user-select: none;
+  }
+  .food-toggle .chevron { transition: transform 0.2s ease; }
+  .food-toggle.open .chevron { transform: rotate(180deg); }
+  .food-panel {
+    display: none;
+    padding: 8px 10px 2px;
+  }
+  .food-panel.open { display: block; }
+
+  .custom-group h2.collapsible-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+  }
+  .collapsible-header .chevron { transition: transform 0.2s ease; }
+  .collapsible-header.open .chevron { transform: rotate(180deg); }
+  .collapsible-list { display: none; }
+  .collapsible-list.open { display: block; }
+  footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #888; }
+
+  .fab-add {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--terracotta);
+    color: white;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    cursor: pointer;
+    z-index: 600;
+  }
+  .fab-add:active { opacity: 0.85; }
+
+  .fab-locate {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: white;
+    color: var(--sea);
+    border: none;
+    font-size: 1.3rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    cursor: pointer;
+    z-index: 600;
+  }
+  .fab-locate:active { opacity: 0.85; }
+
+  .fab-days {
+    position: absolute;
+    bottom: 16px;
+    left: 72px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: white;
+    color: var(--terracotta);
+    border: none;
+    font-size: 1.3rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    cursor: pointer;
+    z-index: 600;
+  }
+  .fab-days:active { opacity: 0.85; }
+
+  .days-nav-box .day-nav-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #fdf3ec;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .days-nav-box .day-nav-btn:active { opacity: 0.8; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: white;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 16px 24px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .modal-box .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .modal-box h2 { margin: 0; font-size: 1.05rem; color: var(--sea); }
+  .modal-close {
+    background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #888; padding: 0 4px;
+  }
+  .modal-box form { display: flex; flex-direction: column; gap: 8px; }
+  .modal-box label { font-size: 0.8rem; color: #555; margin-bottom: -4px; }
+  .modal-box input, .modal-box select, .modal-box textarea {
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  .modal-box button[type="submit"] {
+    background: var(--sea);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .modal-box button[type="submit"]:active { opacity: 0.85; }
+  .add-status { font-size: 0.8rem; margin-top: 4px; }
+  .add-status.error { color: #c1502e; }
+  .add-status.ok { color: #2c7873; }
+
+  .custom-group { margin: 14px 16px; }
+  .custom-group h2 { font-size: 1.05rem; color: var(--ink); margin: 0 0 8px; }
+  .custom-item {
+    background: white;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .custom-item .info a { color: var(--sea); text-decoration: none; font-weight: 600; }
+  .custom-item .info .notes { font-size: 0.82rem; color: #555; margin-top: 2px; }
+  .custom-item .del-btn {
+    background: none; border: none; color: #c1502e; font-size: 1.1rem; cursor: pointer; padding: 0 4px;
+  }
+  .custom-emoji-icon { font-size: 20px; text-align: center; line-height: 24px; overflow: visible !important; }
+  .custom-marker-inner {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    font-size: 22px;
+    text-align: center;
+    line-height: 30px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+  }
+  .marker-num-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #ffcc00;
+    color: #1a1a1a;
+    font-size: 0.85rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 3px 6px;
+    border-radius: 999px;
+    border: 2px solid #1a1a1a;
+    min-width: 20px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .num-badge {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #ffcc00;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+    font-weight: 900;
+    border: 2px solid #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+
+  .day-nav {
+    position: sticky;
+    top: 50vh;
+    z-index: 550;
+    background: var(--sand);
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 4px 6px -2px rgba(0,0,0,0.08);
+    scrollbar-width: none;
+  }
+  .day-nav::-webkit-scrollbar { display: none; }
+  .day-nav-btn {
+    flex: 0 0 auto;
+    background: white;
+    border: 2px solid var(--terracotta);
+    color: var(--terracotta);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  .day-nav-btn:active { background: var(--terracotta); color: white; }
+  .day-nav-btn.active { background: var(--terracotta); color: white; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Itinerario Sicilia Occidentale</h1>
+  <p>5–11 ottobre 2026 · Base: San Martino delle Scale (Monreale)</p>
+</header>
+
+<div class="info-badge-wrap">
+  <button class="info-badge" id="info-badge-btn" title="Informazioni">!</button>
+  <div class="info-tooltip" id="info-tooltip">
+    📍 La mappa qui sotto richiede connessione internet per caricare le tile e per cercare nuovi indirizzi. La lista con i link a Google Maps funziona sempre, anche senza connessione. I luoghi che aggiungi restano salvati su questo dispositivo/browser anche se chiudi la pagina.
+  </div>
+</div>
+
+<div id="map-container">
+  <div id="map"></div>
+  <button class="fab-locate" id="fab-locate-btn" title="Rileva la mia posizione">📍</button>
+  <button class="fab-add" id="fab-add-btn" title="Aggiungi un luogo">+</button>
+</div>
+
+<div class="day-nav" id="day-nav"></div>
+
+<div class="modal-overlay" id="add-modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>➕ Aggiungi un luogo suggerito da un amico</h2>
+      <button class="modal-close" id="modal-close-btn">✕</button>
+    </div>
+    <form id="add-place-form">
+      <label>Nome del posto</label>
+      <input type="text" id="place-name" placeholder="Es. Trattoria da Pina" required>
+
+      <label>Categoria</label>
+      <select id="place-category">
+        <option value="visita">🏛️ Da visitare</option>
+        <option value="cibo">🍽️ Dove mangiare</option>
+      </select>
+
+      <label>Indirizzo o zona (es. Via Roma 10, Trapani)</label>
+      <input type="text" id="place-address" placeholder="Indirizzo o città" required>
+
+      <label>Note (opzionale)</label>
+      <textarea id="place-notes" rows="2" placeholder="Consigliato da chi, cosa ordinare, ecc."></textarea>
+
+      <button type="submit">Aggiungi alla mappa</button>
+      <div id="add-status" class="add-status"></div>
+    </form>
+  </div>
+</div>
+
+<div id="custom-visita" class="custom-group" style="display:none;">
+  <h2>🏛️ Luoghi da visitare (aggiunti)</h2>
+  <div id="custom-visita-list"></div>
+</div>
+
+<div id="custom-cibo" class="custom-group" style="display:none;">
+  <h2 class="collapsible-header open" onclick="document.getElementById('custom-cibo-list').classList.toggle('open'); this.classList.toggle('open');">
+    🍽️ Posti dove mangiare (aggiunti) <span class="chevron">▾</span>
+  </h2>
+  <div id="custom-cibo-list" class="collapsible-list open"></div>
+</div>
+
+<div id="days"></div>
+
+<footer>Salva questa pagina sul telefono/PC per averla sempre a disposizione durante il viaggio.</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const BASE = { name: "Base — San Martino delle Scale (Via Valle Paradiso)", lat: 38.0918857, lng: 13.2565778, notes: "Partenza e ritorno ogni giorno" };
+
+const days = [
+  {
+    title: "Lun 5 ott — Palermo centro (mezza giornata)",
+    stops: [
+      BASE,
+      { name: "Palermo centro (Quattro Canti)", lat: 38.1157, lng: 13.3615, notes: "~20 km, 25-30 min in auto",
+        parking: "Garage Magione (Via Magione) o area scoperta di Piazza Magione, coperti/scoperti a pagamento vicino al centro. In ottobre, fuori stagione, si trova spesso posto libero su strada nelle vie limitrofe.",
+        food: "Mercato di Ballarò — street food: pane e panelle, panelle e crocché, arancine, sfincione (8-12€/persona).",
+        foodSpots: [
+          { name: "Mercato di Ballarò", address: "Piazza Ballarò, Palermo" },
+          { name: "Antica Focacceria San Francesco", address: "Via Alessandro Paternostro 58, Palermo" }
+        ] },
+      BASE
+    ]
+  },
+  {
+    title: "Mar 6 ott — Monreale + Mondello",
+    stops: [
+      BASE,
+      { name: "Monreale centro", lat: 38.0807591, lng: 13.28809, notes: "~5 km dalla base, 10 min in auto",
+        parking: "Parcheggio libero lungo Via Roma e nelle vie adiacenti alla salita del centro storico; in bassa stagione facile trovare posto gratuito.",
+        food: "Forni e pasticcerie nel centro di Monreale per cannoli e dolci di mandorla — nessun locale specifico segnalato, basta seguire l'odore di forno appena sfornato nelle vie del corso.",
+        foodSpots: [
+          { name: "Centro storico di Monreale (Corso Umberto I / Via Roma)", address: "Corso Umberto I, Monreale" }
+        ] },
+      { name: "Mondello Beach", lat: 38.2000633, lng: 13.3285893, notes: "~25 km dalla base, 35 min in auto",
+        parking: "Parcheggi pubblici gratuiti per le prime 2h in alcune aree (es. Piazzale Ungheria a pagamento ~1,50€/h dopo), oppure parcheggi privati come Parking Oleandri o Parking Mondello (~5€/giorno). Meglio arrivare presto.",
+        food: "Chioschi sul lungomare di Mondello — panelle, crocché, frittura di paranza (10-15€/persona).",
+        foodSpots: [
+          { name: "Lungomare di Mondello (viale Regina Elena)", address: "Viale Regina Elena, Mondello, Palermo" }
+        ] },
+      BASE
+    ]
+  },
+  {
+    title: "Mer 7 ott — Cefalù",
+    stops: [
+      BASE,
+      { name: "Cefalù centro storico", lat: 38.034991, lng: 14.0213259, notes: "~75 km, 1h10 in auto. Alternativa: treno da Palermo Centrale, 55 min, ~7€",
+        parking: "Parcheggio gratuito zona 'Dietro Castello' (con bus navetta per il centro) oppure parcheggio gratuito vicino Piazza delle Vittime (stazione). Il Lungomare Giardina è a pagamento (~6€/giorno).",
+        food: "Forni e chioschi del centro storico — pane cunzato, dolci di mandorla, pesce fritto da asporto vicino al porticciolo (10-15€/persona).",
+        foodSpots: [
+          { name: "Centro storico / porticciolo di Cefalù", address: "Corso Ruggero, Cefalù" }
+        ] },
+      BASE
+    ]
+  },
+  {
+    title: "Gio 8 ott — Riserva dello Zingaro + San Vito Lo Capo",
+    stops: [
+      BASE,
+      { name: "Riserva Naturale dello Zingaro", lat: 38.1223635, lng: 12.7850634, notes: "~110 km, 1h40 in auto",
+        parking: "Parcheggio a pagamento presso i due ingressi (Scopello nord e San Vito Lo Capo sud), qualche euro per l'intera giornata.",
+        food: "Punto ristoro/bar vicino all'ingresso Scopello per uno spuntino veloce." },
+      { name: "San Vito Lo Capo", lat: 38.1759419, lng: 12.7335733, notes: "~120 km, 1h50 in auto",
+        parking: "Parcheggi a pagamento lungo Via Savoia e nelle vie retrostanti la spiaggia; in bassa stagione si trova posto gratuito su strada più lontano dal centro.",
+        food: "Ristorantino Crik & Crok — cous cous di pesce, ottimo rapporto qualità-prezzo, molto amato dai locali (15-20€/persona).",
+        foodSpots: [
+          { name: "Ristorantino Crik & Crok", address: "Via Regina Margherita 99, San Vito Lo Capo" }
+        ] },
+      BASE
+    ]
+  },
+  {
+    title: "Ven 9 ott — Erice + Trapani + Saline",
+    stops: [
+      BASE,
+      { name: "Erice (Porta Trapani)", lat: 38.0361508, lng: 12.5835271, notes: "~100 km, 1h20-1h30 in auto",
+        parking: "Parcheggio a pagamento vicino Porta Trapani e lungo Viale Conte Pepoli; in bassa stagione/orari mattutini spesso libero. Attenzione ai parcheggiatori abusivi nelle zone periferiche di Trapani vicino alla funivia.",
+        food: "Maria Grammatico — pasticceria storica per le famose genovesi (dolci alla mandorla) (5-10€/persona).",
+        foodSpots: [
+          { name: "Maria Grammatico", address: "Via Vittorio Emanuele 14, Erice" }
+        ] },
+      { name: "Trapani centro", lat: 38.0174282, lng: 12.5364464, notes: "Saline nei dintorni",
+        parking: "Parcheggio Via Capua (vicino stazione funivia) o Piazza Sant'Agostino, entrambi a pagamento a tariffa oraria contenuta.",
+        food: "Osteria La Bettolaccia — busiate al pesto trapanese e cous cous di pesce, un po' più curato (25-35€/persona).",
+        foodSpots: [
+          { name: "Osteria La Bettolaccia", address: "Via Generale Enrico Fardella 23, Trapani" }
+        ] },
+      BASE
+    ]
+  },
+  {
+    title: "Sab 10 ott — Segesta + Castellammare del Golfo",
+    stops: [
+      BASE,
+      { name: "Parco Archeologico di Segesta", lat: 37.9417689, lng: 12.835728, notes: "~75 km, 1h in auto",
+        parking: "Ampio parcheggio gratuito in terra battuta all'ingresso del parco archeologico.",
+        food: "Bar/caffetteria all'interno del parco per una pausa veloce." },
+      { name: "Castellammare del Golfo", lat: 38.0264765, lng: 12.8811764, notes: "~85 km, 1h10 in auto",
+        parking: "Parcheggio libero lungo il porto e le vie del centro, generalmente semplice fuori stagione estiva.",
+        food: "Panifici locali per pane e prodotti da forno; trattorie sul porto per pesce fresco (15-20€/persona).",
+        foodSpots: [
+          { name: "Porto di Castellammare del Golfo", address: "Via del Cristo, Castellammare del Golfo" }
+        ] },
+      BASE
+    ]
+  },
+  {
+    title: "Dom 11 ott — Palermo e partenza (mezza giornata)",
+    stops: [
+      BASE,
+      { name: "Palermo (Cappuccini / Mercato Capo)", lat: 38.1207, lng: 13.3465, notes: "~20 km dalla base, 25-30 min in auto",
+        parking: "Parcheggio Via Lagumina Fratelli o strisce blu nelle vie limitrofe al mercato del Capo, tariffa oraria contenuta.",
+        food: "Ultimo giro street food al Mercato del Capo prima della partenza (5-8€/persona).",
+        foodSpots: [
+          { name: "Mercato del Capo", address: "Via Sant'Agostino, Palermo" }
+        ] },
+      BASE
+    ]
+  }
+];
+
+// Render day cards with Google Maps links
+const daysContainer = document.getElementById('days');
+days.forEach((day, dayIdx) => {
+  const card = document.createElement('div');
+  card.className = 'day-card';
+  card.id = `day-${dayIdx}`;
+  let stopsHtml = `<div class="meta">🏠 Partenza e ritorno: ${BASE.name}</div>`;
+  day.stops.filter(s => s !== BASE).forEach((s, stopIdx) => {
+    const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
+    const popupHtml = `<b>${s.name}</b><br>${s.notes}${s.parking ? `<br>🅿️ ${s.parking}` : ''}${s.food ? `<br>🍽️ ${s.food}` : ''}`;
+    let foodSpotsHtml = '';
+    if (s.foodSpots) {
+      foodSpotsHtml = s.foodSpots.map(fs => {
+        const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fs.address)}&travelmode=driving`;
+        return `📍 ${fs.name} — <a href="${dirUrl}" target="_blank">indicazioni ↗</a> · <a href="#" onclick="focusAddressOnMap('${fs.address.replace(/'/g, "\\'")}','${fs.name.replace(/'/g, "\\'")}',this); return false;">👁️ vedi in mappa</a>`;
+      }).join('<br>');
+    }
+    const foodId = `food-${dayIdx}-${stopIdx}`;
+    const hasFood = s.food || foodSpotsHtml;
+    stopsHtml += `
+      <div class="stop">
+        <a href="#" onclick="showOnMap(${s.lat},${s.lng},\`${popupHtml.replace(/`/g, "'")}\`); return false;">👁️ ${s.name}</a>
+        · <a href="${gmapsUrl}" target="_blank">apri in Google Maps ↗</a>
+        <div class="notes">${s.notes} · (${s.lat.toFixed(4)}, ${s.lng.toFixed(4)})</div>
+        ${s.parking ? `<div class="notes">🅿️ ${s.parking}</div>` : ''}
+        ${hasFood ? `
+          <div class="food-toggle" onclick="document.getElementById('${foodId}').classList.toggle('open'); this.classList.toggle('open');">
+            <span>🍽️ Dove mangiare</span><span class="chevron">▾</span>
+          </div>
+          <div class="food-panel" id="${foodId}">
+            ${s.food ? `<div class="notes">${s.food}</div>` : ''}
+            ${foodSpotsHtml ? `<div class="notes">${foodSpotsHtml}</div>` : ''}
+          </div>` : ''}
+      </div>`;
+  });
+  card.innerHTML = `<h2>${day.title}</h2>${stopsHtml}`;
+  daysContainer.appendChild(card);
+});
+
+// ===== Barra di navigazione con un pulsante per ogni giorno =====
+const dayNav = document.getElementById('day-nav');
+const dayShortLabels = ["Lun 5", "Mar 6", "Mer 7", "Gio 8", "Ven 9", "Sab 10", "Dom 11"];
+days.forEach((day, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'day-nav-btn';
+  btn.textContent = dayShortLabels[idx] || `Giorno ${idx + 1}`;
+  btn.id = `day-nav-btn-${idx}`;
+  btn.addEventListener('click', () => {
+    document.getElementById(`day-${idx}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    focusDayOnMap(idx);
+  });
+  dayNav.appendChild(btn);
+});
+
+// Evidenzia il pulsante del giorno visibile mentre si scorre
+const dayObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const idx = entry.target.id.split('-')[1];
+    const btn = document.getElementById(`day-nav-btn-${idx}`);
+    if (btn) btn.classList.toggle('active', entry.isIntersecting);
+  });
+}, { rootMargin: '-50% 0px -40% 0px' });
+days.forEach((day, idx) => {
+  const el = document.getElementById(`day-${idx}`);
+  if (el) dayObserver.observe(el);
+});
+
+// Render Leaflet map (needs connection for tiles)
+// ===== Tooltip informativo (icona !) =====
+const infoTooltip = document.getElementById('info-tooltip');
+document.getElementById('info-badge-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  infoTooltip.classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+  if (!infoTooltip.contains(e.target) && e.target.id !== 'info-badge-btn') {
+    infoTooltip.classList.remove('open');
+  }
+});
+
+// ===== Registrazione service worker (solo se ospitata online, non da file locale) =====
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* non disponibile, es. file:// */ });
+  });
+}
+
+let map = null;
+
+// Centra la mappa su un punto e mostra un popup, scrollando la mappa in vista
+function showOnMap(lat, lng, html) {
+  if (!map) return;
+  document.getElementById('map-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  map.setView([lat, lng], 15);
+  L.popup().setLatLng([lat, lng]).setContent(html).openOn(map);
+}
+
+// Geocodifica al volo un indirizzo (con cache) e centra la mappa
+const onDemandGeoCache = {};
+async function focusAddressOnMap(address, label, linkEl) {
+  const originalText = linkEl.textContent;
+  try {
+    let coords = onDemandGeoCache[address];
+    if (!coords) {
+      linkEl.textContent = '🔎 Cerco sulla mappa...';
+      coords = await geocodeAddress(address);
+      if (coords) onDemandGeoCache[address] = coords;
+    }
+    if (coords) {
+      showOnMap(coords.lat, coords.lng, `<b>${label}</b><br>${address}`);
+    } else {
+      alert('Indirizzo non trovato sulla mappa: ' + address);
+    }
+  } finally {
+    linkEl.textContent = originalText;
+  }
+}
+window.focusAddressOnMap = focusAddressOnMap;
+window.showOnMap = showOnMap;
+let dayLayers = [];
+try {
+  map = L.map('map').setView([38.05, 13.0], 8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 18
+  }).addTo(map);
+
+  const colors = ['#c1502e', '#1a6e8e', '#7a9e3f', '#b8860b', '#8e44ad', '#2c7873', '#c94f4f'];
+
+  // Marker fisso unico per la base
+  const baseMarker = L.marker([BASE.lat, BASE.lng]).addTo(map).bindPopup(`<b>🏠 ${BASE.name}</b><br>Partenza e ritorno ogni giorno`);
+
+  days.forEach((day, i) => {
+    const latlngs = [];
+    const dayMarkerList = [];
+    day.stops.forEach(s => {
+      latlngs.push([s.lat, s.lng]);
+      if (s !== BASE) {
+        const marker = L.circleMarker([s.lat, s.lng], {
+          radius: 7,
+          fillColor: colors[i % colors.length],
+          color: '#fff',
+          weight: 2,
+          fillOpacity: 0.9
+        }).addTo(map);
+        marker.bindPopup(`<b>${s.name}</b><br>${s.notes}${s.parking ? `<br>🅿️ ${s.parking}` : ''}${s.food ? `<br>🍽️ ${s.food}` : ''}`);
+        dayMarkerList.push(marker);
+      }
+    });
+    let line = null;
+    if (latlngs.length > 1) {
+      line = L.polyline(latlngs, { color: colors[i % colors.length], weight: 3, opacity: 0.6, dashArray: '6,6' }).addTo(map);
+    }
+    dayLayers.push({ line, markers: dayMarkerList, bounds: L.latLngBounds(latlngs) });
+  });
+} catch (e) {
+  document.getElementById('map').innerHTML = '<p style="text-align:center;padding:40px;">Mappa non disponibile senza connessione. Usa i link qui sotto.</p>';
+}
+
+// ===== Evidenzia sulla mappa solo il giorno selezionato =====
+let selectedDayIdx = null;
+function focusDayOnMap(idx) {
+  if (!map || !dayLayers.length) return;
+  selectedDayIdx = idx;
+  dayLayers.forEach((dl, i) => {
+    const isSelected = i === idx;
+    if (dl.line) dl.line.setStyle({ opacity: isSelected ? 0.95 : 0.08, weight: isSelected ? 5 : 2 });
+    dl.markers.forEach(m => m.setStyle({ opacity: isSelected ? 1 : 0.15, fillOpacity: isSelected ? 0.9 : 0.1 }));
+  });
+  const targetBounds = dayLayers[idx].bounds;
+  if (targetBounds.isValid()) {
+    map.fitBounds(targetBounds.pad(0.25));
+  }
+}
+window.focusDayOnMap = focusDayOnMap;
+
+// ===== Rileva la posizione dell'utente =====
+let myLocationMarker = null;
+document.getElementById('fab-locate-btn').addEventListener('click', () => {
+  if (!map) return;
+  if (!navigator.geolocation) {
+    alert('Il tuo browser non supporta la geolocalizzazione.');
+    return;
+  }
+  document.getElementById('fab-locate-btn').textContent = '⏳';
+  map.locate({ setView: true, maxZoom: 15, enableHighAccuracy: true });
+});
+
+map && map.on('locationfound', (e) => {
+  document.getElementById('fab-locate-btn').textContent = '📍';
+  if (myLocationMarker) map.removeLayer(myLocationMarker);
+  myLocationMarker = L.circleMarker(e.latlng, {
+    radius: 8,
+    fillColor: '#1a73e8',
+    color: '#fff',
+    weight: 3,
+    fillOpacity: 1
+  }).addTo(map);
+  myLocationMarker.bindPopup('📍 Sei qui (raggio ~' + Math.round(e.accuracy) + ' m)').openPopup();
+});
+
+map && map.on('locationerror', (e) => {
+  document.getElementById('fab-locate-btn').textContent = '📍';
+  alert('Non riesco a rilevare la posizione: ' + e.message + '\n(assicurati di aver dato il permesso di geolocalizzazione al browser)');
+});
+
+// ===== Luoghi aggiunti dagli amici (salvati nel browser) =====
+const STORAGE_KEY = 'palermo-itinerario-luoghi-extra';
+let customMarkers = [];
+
+function loadCustomPlaces() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveCustomPlaces(places) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(places));
+}
+
+function renderCustomPlaces() {
+  const places = loadCustomPlaces();
+  const visitaList = document.getElementById('custom-visita-list');
+  const ciboList = document.getElementById('custom-cibo-list');
+  const visitaSection = document.getElementById('custom-visita');
+  const ciboSection = document.getElementById('custom-cibo');
+  visitaList.innerHTML = '';
+  ciboList.innerHTML = '';
+
+  const visitaPlaces = places.filter(p => p.category === 'visita');
+  const ciboPlaces = places.filter(p => p.category === 'cibo');
+
+  visitaSection.style.display = visitaPlaces.length ? 'block' : 'none';
+  ciboSection.style.display = ciboPlaces.length ? 'block' : 'none';
+
+  places.forEach((p, idx) => {
+    const num = idx + 1;
+    const targetList = p.category === 'visita' ? visitaList : ciboList;
+    const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=driving`;
+    const item = document.createElement('div');
+    item.className = 'custom-item';
+    const popupHtml = `<b>#${num} — ${p.name}</b><br>${p.address}${p.notes ? '<br>' + p.notes : ''}`;
+    let viewLink;
+    if (p.lat && p.lng) {
+      viewLink = `<a href="#" class="view-map-link" data-lat="${p.lat}" data-lng="${p.lng}" data-popup="${popupHtml.replace(/"/g, '&quot;')}">👁️ vedi in mappa</a>`;
+    } else {
+      viewLink = `<a href="#" onclick="focusAddressOnMap('${p.address.replace(/'/g, "\\'")}','${p.name.replace(/'/g, "\\'")}',this); return false;">👁️ vedi in mappa</a>`;
+    }
+    item.innerHTML = `
+      <div class="num-badge">${num}</div>
+      <div class="info">
+        <a href="${dirUrl}" target="_blank">${p.category === 'visita' ? '🏛️' : '🍽️'} ${p.name} — indicazioni ↗</a>
+        · ${viewLink}
+        <div class="notes">${p.address}${p.notes ? ' · ' + p.notes : ''}</div>
+      </div>
+      <button class="del-btn" data-idx="${idx}" title="Rimuovi">✕</button>
+    `;
+    targetList.appendChild(item);
+  });
+
+  // Collega i link "vedi in mappa" con coordinate già note
+  document.querySelectorAll('.view-map-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      showOnMap(parseFloat(link.dataset.lat), parseFloat(link.dataset.lng), link.dataset.popup);
+    });
+  });
+
+  // Bottoni rimozione
+  document.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const places = loadCustomPlaces();
+      const idx = parseInt(btn.dataset.idx, 10);
+      places.splice(idx, 1);
+      saveCustomPlaces(places);
+      renderCustomPlaces();
+    });
+  });
+
+  // Rimuove i marker personalizzati precedenti prima di ridisegnare (evita duplicati)
+  if (map) {
+    customMarkers.forEach(m => map.removeLayer(m));
+    customMarkers = [];
+    places.forEach((p, idx) => {
+      if (p.lat && p.lng) {
+        const num = idx + 1;
+        const icon = L.divIcon({
+          html: `<div class="custom-marker-inner">${p.category === 'visita' ? '🏛️' : '🍽️'}<span class="marker-num-badge">${num}</span></div>`,
+          className: 'custom-emoji-icon',
+          iconSize: [40, 40],
+          iconAnchor: [20, 35]
+        });
+        const marker = L.marker([p.lat, p.lng], { icon }).addTo(map);
+        marker.bindPopup(`<b>#${num} — ${p.name}</b><br>${p.address}${p.notes ? '<br>' + p.notes : ''}`);
+        customMarkers.push(marker);
+      }
+    });
+  }
+}
+
+// Geocodifica tramite Nominatim (OpenStreetMap) — nessuna chiave richiesta
+async function geocodeAddress(address) {
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  const data = await res.json();
+  if (data && data.length > 0) {
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  }
+  return null;
+}
+
+// ===== Apertura/chiusura finestra modale per aggiungere un luogo =====
+const modalOverlay = document.getElementById('add-modal-overlay');
+document.getElementById('fab-add-btn').addEventListener('click', () => {
+  modalOverlay.classList.add('open');
+});
+document.getElementById('modal-close-btn').addEventListener('click', () => {
+  modalOverlay.classList.remove('open');
+});
+modalOverlay.addEventListener('click', (e) => {
+  if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+});
+
+document.getElementById('add-place-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nameInput = document.getElementById('place-name');
+  const categoryInput = document.getElementById('place-category');
+  const addressInput = document.getElementById('place-address');
+  const notesInput = document.getElementById('place-notes');
+  const statusEl = document.getElementById('add-status');
+
+  const name = nameInput.value.trim();
+  const category = categoryInput.value;
+  const address = addressInput.value.trim();
+  const notes = notesInput.value.trim();
+
+  if (!name || !address) return;
+
+  statusEl.textContent = 'Cerco l\'indirizzo sulla mappa...';
+  statusEl.className = 'add-status';
+
+  let coords = null;
+  try {
+    coords = await geocodeAddress(address);
+  } catch (err) {
+    coords = null;
+  }
+
+  const places = loadCustomPlaces();
+  places.push({
+    name, category, address, notes,
+    lat: coords ? coords.lat : null,
+    lng: coords ? coords.lng : null
+  });
+  saveCustomPlaces(places);
+  renderCustomPlaces();
+
+  if (coords && map) {
+    map.setView([coords.lat, coords.lng], 13);
+    statusEl.textContent = '✅ Aggiunto e trovato sulla mappa!';
+    statusEl.className = 'add-status ok';
+  } else {
+    statusEl.textContent = '⚠️ Aggiunto alla lista, ma non trovato sulla mappa (controlla l\'indirizzo). Il link alle indicazioni funziona comunque.';
+    statusEl.className = 'add-status error';
+  }
+
+  nameInput.value = '';
+  addressInput.value = '';
+  notesInput.value = '';
+  setTimeout(() => { modalOverlay.classList.remove('open'); statusEl.textContent = ''; }, 1400);
+});
+
+// ===== Segnalazioni street food/tipici da fonti verificate (pre-caricate al primo avvio) =====
+const DEFAULT_PLACES = [
+  { name: "Tanino (stigghiolaro)", category: "cibo", address: "Vucciria, Palermo", notes: "Stigghiole e mangia e bevi — cucchiaio.it" },
+  { name: "Gioacchino", category: "cibo", address: "Vucciria, Palermo", notes: "Pane e panelle, pane e crocchè — venditore ambulante, cucchiaio.it" },
+  { name: "Il Meusaro Giuseppe Basile", category: "cibo", address: "Piazza Caracciolo, Palermo", notes: "Pani câ meusa dal 1952 — cucchiaio.it" },
+  { name: "Il Covo del Garraffello", category: "cibo", address: "Piazza Garraffello, Palermo", notes: "Stigghiole e mangia e bevi, meglio la sera — cucchiaio.it" },
+  { name: "Pescheria Benfante", category: "cibo", address: "Vucciria, Palermo", notes: "Piattini take away di polpo arrostito — cucchiaio.it" },
+  { name: "Nni Franco U'Vastiddaru", category: "cibo", address: "Via Vittorio Emanuele 102, Palermo", notes: "Istituzione storica del pane con la milza, 30 anni di attività — cucchiaio.it" },
+  { name: "Friggitoria da Arianna", category: "cibo", address: "Mercato del Capo, Palermo", notes: "Arancine, panelle e crocchè — cucchiaio.it" },
+  { name: "Fish m Chips", category: "cibo", address: "Mercato del Capo, Palermo", notes: "Coni di pesce fritto da asporto — cucchiaio.it" },
+  { name: "Da Angelo", category: "cibo", address: "Piazza San Domenico, Palermo", notes: "Sfincione — cucchiaio.it" },
+  { name: "Bar Marocco", category: "cibo", address: "Corso Vittorio Emanuele, Palermo", notes: "Arancine al burro (mozzarella e prosciutto), di fronte alla Cattedrale — cucchiaio.it" },
+  { name: "Ke Palle", category: "cibo", address: "Via Maqueda 270, Palermo", notes: "Arancine creative (curry, nero di seppia, parmigiana) — cucchiaio.it" },
+  { name: "Gelateria Il Signor di Carbognano", category: "cibo", address: "Via Notarbartolo 2/C, Palermo", notes: "Gelati con cioccolato di Modica e brioche fresche — cucchiaio.it" },
+  { name: "Bar del Sole", category: "cibo", address: "Piazza Vittorio Emanuele 22, Monreale", notes: "Aperitivo con arancini, pane cunzatu e panelle, sulla piazza del Duomo" },
+  { name: "Antico Chiosco", category: "cibo", address: "Piazza Mondello 4, Palermo", notes: "Rosticceria storica sul lungomare di Mondello" },
+  { name: "caFOODda", category: "cibo", address: "Piazza Duomo, Cefalù", notes: "Street food siciliano (pesce e carne) in piazza Duomo" },
+  { name: "Bar Duomo", category: "cibo", address: "Piazza Duomo, Cefalù", notes: "Pasticceria classica e granite con vista sulla piazza" },
+  { name: "Nescy", category: "cibo", address: "Via Discesa Marina 23, Castellammare del Golfo", notes: "Take away in centro storico, ottima frittura mista di pesce fresco" }
+];
+
+async function seedDefaultPlaces() {
+  const seededNames = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY + '-seeded-names') || '[]'));
+  const newOnes = DEFAULT_PLACES.filter(dp => !seededNames.has(dp.name));
+  if (newOnes.length === 0) return;
+  const places = loadCustomPlaces();
+  newOnes.forEach(dp => {
+    places.push({ ...dp, lat: null, lng: null });
+    seededNames.add(dp.name);
+  });
+  saveCustomPlaces(places);
+  localStorage.setItem(STORAGE_KEY + '-seeded-names', JSON.stringify([...seededNames]));
+}
+
+// Geocodifica in sequenza i luoghi senza coordinate (rispettando i limiti di Nominatim)
+async function geocodeMissingCoords() {
+  const places = loadCustomPlaces();
+  let changed = false;
+  for (let i = 0; i < places.length; i++) {
+    if (!places[i].lat || !places[i].lng) {
+      try {
+        const coords = await geocodeAddress(places[i].address);
+        if (coords) {
+          places[i].lat = coords.lat;
+          places[i].lng = coords.lng;
+          changed = true;
+        }
+      } catch (e) { /* ignora e prosegue */ }
+      await new Promise(r => setTimeout(r, 1100)); // rispetta il limite di 1 richiesta/secondo
+    }
+  }
+  if (changed) {
+    saveCustomPlaces(places);
+    renderCustomPlaces();
+  }
+}
+
+// Carica i luoghi salvati all'avvio
+(async () => {
+  await seedDefaultPlaces();
+  renderCustomPlaces();
+  geocodeMissingCoords(); // in background, aggiorna la mappa man mano che trova le coordinate
+})();
+
+</script>
+
+</body>
+</html>
