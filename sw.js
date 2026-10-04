@@ -1,10 +1,30 @@
 // Service worker: l'app si apre anche senza connessione (le tile della mappa
 // già visualizzate restano in cache; la ricerca di nuovi indirizzi richiede rete).
-const CACHE = 'palermo-itinerario-v3';
+const CACHE = 'palermo-itinerario-v4';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+// Librerie della mappa: salvate subito, così la pagina funziona offline anche al primo riavvio
+const CDN = [
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+  'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  'https://unpkg.com/leaflet@1.9.4/dist/images/layers.png',
+  'https://unpkg.com/leaflet@1.9.4/dist/images/layers-2x.png'
+];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(async (c) => {
+        await c.addAll(SHELL);
+        // Una libreria non scaricabile non deve bloccare l'installazione
+        await Promise.all(CDN.map((u) =>
+          fetch(u).then((res) => (res && res.ok ? c.put(u, res) : null)).catch(() => null)
+        ));
+      })
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (e) => {
