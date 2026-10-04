@@ -1347,7 +1347,11 @@ const dayColors = ['#c1502e', '#1a6e8e', '#7a9e3f', '#b8860b', '#8e44ad', '#2c78
 try {
   map = L.map('map').setView([38.05, 13.0], 8);
   // Sfondo semplificato (costa) sotto le tile: se la rete manca resta visibile dove sono le tappe
+  // Pannello dedicato SOTTO le tile (z-index 200): prima il disegno stava sopra e copriva la Sicilia
+  map.createPane('costa');
+  map.getPane('costa').style.zIndex = 150;
   L.geoJSON({ type: 'Feature', properties: {}, geometry: SICILIA_COAST }, {
+    pane: 'costa',
     style: { color: '#7d9aa6', weight: 1, fillColor: '#ebe5d3', fillOpacity: 1 },
     interactive: false
   }).addTo(map);
