@@ -344,6 +344,92 @@
   }
   .day-nav-btn:active { background: var(--terracotta); color: white; }
   .day-nav-btn.active { background: var(--terracotta); color: white; }
+
+  /* ===== Modifica tappe, luoghi, installazione ===== */
+  .stop-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .mini-btn {
+    background: #f1ede6;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .mini-btn:active { opacity: 0.8; }
+  .mini-btn:disabled { opacity: 0.35; cursor: default; }
+  .mini-btn.danger { color: var(--terracotta); }
+  .add-stop-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    border: 2px dashed var(--terracotta);
+    background: transparent;
+    color: var(--terracotta);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .add-stop-btn:active { background: #fdf3ec; }
+  .custom-item .info { flex: 1; min-width: 0; }
+  .item-actions { display: flex; gap: 2px; flex: 0 0 auto; }
+  .custom-item .edit-place-btn {
+    background: none; border: none; font-size: 1rem; cursor: pointer; padding: 0 4px;
+  }
+  .modal-box .hint { font-size: 0.78rem; color: #777; }
+  .modal-box button[type="submit"]:disabled { opacity: 0.6; }
+
+  .data-tools {
+    margin: 14px 16px;
+    background: white;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+  .data-tools h3 { margin: 0 0 6px; font-size: 1rem; color: var(--sea); }
+  .data-tools p { margin: 0 0 10px; font-size: 0.82rem; color: #555; line-height: 1.4; }
+  .data-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+  .data-buttons button {
+    background: #eef5f8;
+    color: var(--sea);
+    border: none;
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .data-buttons button.danger { background: #fdf3ec; color: var(--terracotta); }
+  .data-buttons button:active { opacity: 0.8; }
+
+  .install-bar { text-align: center; padding: 10px 16px 0; }
+  #install-btn {
+    background: var(--terracotta);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  #install-btn:active { opacity: 0.85; }
+  .install-help {
+    display: none;
+    margin: 10px auto 0;
+    max-width: 440px;
+    background: #fff3cd;
+    color: #664d03;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    text-align: left;
+    line-height: 1.4;
+  }
+  .install-help.open { display: block; }
 </style>
 </head>
 <body>
@@ -353,10 +439,15 @@
   <p>5–11 ottobre 2026 · Base: San Martino delle Scale (Monreale)</p>
 </header>
 
+<div class="install-bar" id="install-bar">
+  <button type="button" id="install-btn">📲 Come installare l'app</button>
+  <div class="install-help" id="install-help"></div>
+</div>
+
 <div class="info-badge-wrap">
   <button class="info-badge" id="info-badge-btn" title="Informazioni">!</button>
   <div class="info-tooltip" id="info-tooltip">
-    📍 La mappa qui sotto richiede connessione internet per caricare le tile e per cercare nuovi indirizzi. La lista con i link a Google Maps funziona sempre, anche senza connessione. I luoghi che aggiungi restano salvati su questo dispositivo/browser anche se chiudi la pagina. I voti dei locali (TA = Tripadvisor, G = Google) sono stati rilevati a settembre 2026: verifica sempre gli orari.
+    📍 La mappa qui sotto richiede connessione internet per caricare le tile e per cercare nuovi indirizzi. La lista con i link a Google Maps funziona sempre, anche senza connessione. I luoghi che aggiungi e le modifiche alle tappe restano salvati su questo dispositivo anche se chiudi la pagina. I voti dei locali (TA = Tripadvisor, G = Google) sono stati rilevati a settembre 2026: verifica sempre gli orari.
   </div>
 </div>
 
@@ -371,7 +462,7 @@
 <div class="modal-overlay" id="add-modal-overlay">
   <div class="modal-box">
     <div class="modal-header">
-      <h2>➕ Aggiungi un luogo suggerito da un amico</h2>
+      <h2 id="place-modal-title">➕ Aggiungi un luogo suggerito da un amico</h2>
       <button class="modal-close" id="modal-close-btn">✕</button>
     </div>
     <form id="add-place-form">
@@ -390,8 +481,43 @@
       <label>Note (opzionale)</label>
       <textarea id="place-notes" rows="2" placeholder="Consigliato da chi, cosa ordinare, ecc."></textarea>
 
-      <button type="submit">Aggiungi alla mappa</button>
+      <button type="submit" id="place-submit-btn">Aggiungi alla mappa</button>
       <div id="add-status" class="add-status"></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="stop-modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="stop-modal-title">➕ Aggiungi tappa</h2>
+      <button type="button" class="modal-close" id="stop-modal-close-btn">✕</button>
+    </div>
+    <form id="stop-form">
+      <label>Nome della tappa</label>
+      <input type="text" id="stop-name" placeholder="Es. Saline di Trapani" required>
+
+      <label>Giorno</label>
+      <select id="stop-day"></select>
+
+      <label id="stop-address-label">Indirizzo o zona (per trovarlo sulla mappa)</label>
+      <input type="text" id="stop-address" placeholder="Es. Via Chiusa, Nubia, Paceco">
+
+      <label>Oppure coordinate (opzionale, es. 38.1157, 13.3615)</label>
+      <input type="text" id="stop-coords" inputmode="decimal" placeholder="latitudine, longitudine">
+      <div class="hint" id="stop-current-pos"></div>
+
+      <label>Note (distanze, orari, cosa fare)</label>
+      <textarea id="stop-notes" rows="2"></textarea>
+
+      <label>Parcheggio</label>
+      <textarea id="stop-parking" rows="2"></textarea>
+
+      <label>Dove mangiare (testo breve)</label>
+      <textarea id="stop-food" rows="2"></textarea>
+
+      <button type="submit" id="stop-submit-btn">Salva</button>
+      <div id="stop-status" class="add-status"></div>
     </form>
   </div>
 </div>
@@ -410,13 +536,24 @@
 
 <div id="days"></div>
 
-<footer>Salva questa pagina sul telefono/PC per averla sempre a disposizione durante il viaggio.</footer>
+<div class="data-tools">
+  <h3>Gestione dati</h3>
+  <p>Le modifiche restano su questo telefono. Per condividerle con gli altri, esporta il file e invialo (per esempio su WhatsApp): chi lo riceve lo importa da qui.</p>
+  <div class="data-buttons">
+    <button type="button" id="export-btn">⬆️ Esporta</button>
+    <button type="button" id="import-btn">⬇️ Importa</button>
+    <button type="button" id="reset-btn" class="danger">↺ Ripristina itinerario originale</button>
+    <input type="file" id="import-file" accept=".json,application/json" hidden>
+  </div>
+</div>
+
+<footer>Installa l'app sul telefono/PC per averla sempre a disposizione durante il viaggio.</footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const BASE = { name: "Base — San Martino delle Scale (Via Valle Paradiso)", lat: 38.0918857, lng: 13.2565778, notes: "Partenza e ritorno giornaliero" };
+const BASE = { isBase: true, name: "Base — San Martino delle Scale (Via Valle Paradiso)", lat: 38.0918857, lng: 13.2565778, notes: "Partenza e ritorno giornaliero" };
 
-const days = [
+const DEFAULT_DAYS = [
   {
     "title": "Lun 5 ott — Arrivo, Palermo centro e Mercato del Capo",
     "meta": "✈️ Atterraggio 10:30 (volo W46612), ritiro auto e poi dritti in centro a Palermo. La sera si sale alla base: San Martino delle Scale (Via Valle Paradiso).",
@@ -830,50 +967,132 @@ const days = [
   }
 ];
 
-// Render day cards with Google Maps links
-const daysContainer = document.getElementById('days');
-window.__foodSpots = [];
-days.forEach((day, dayIdx) => {
-  const card = document.createElement('div');
-  card.className = 'day-card';
-  card.id = `day-${dayIdx}`;
-  let stopsHtml = `<div class="meta">${day.meta || ('🏠 Partenza e ritorno: ' + BASE.name)}</div>`;
-  day.stops.filter(s => s !== BASE).forEach((s, stopIdx) => {
-    const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
-    const popupHtml = `<b>${s.name}</b><br>${s.notes}${s.parking ? `<br>🅿️ ${s.parking}` : ''}${s.food ? `<br>🍽️ ${s.food}` : ''}`;
-    let foodSpotsHtml = '';
-    if (s.foodSpots) {
-      foodSpotsHtml = s.foodSpots.map(fs => {
-        const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fs.address)}&travelmode=driving`;
-        const spotIdx = window.__foodSpots.push(fs) - 1;
-        return `<div class="fs-item">📍 <b>${fs.name}</b>${fs.desc ? `<div class="fs-desc">${fs.desc}</div>` : ''}<a href="${dirUrl}" target="_blank">indicazioni ↗</a> · <a href="#" onclick="openFoodSpot(${spotIdx}, this); return false;">👁️ vedi in mappa</a></div>`;
-      }).join('') + `<div class="fs-note">Voti: TA = Tripadvisor, G = Google (rilevati a settembre 2026). Controlla gli orari prima di andare.</div>`;
+// ===== Utilità =====
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, ch => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+  ));
+}
+
+// ===== Itinerario modificabile (salvato su questo dispositivo) =====
+const DAYS_KEY = 'palermo-itinerario-giorni';
+
+function normalizeDays(arr) {
+  return arr.map(d => ({
+    ...d,
+    stops: (d.stops || []).map(s => (s && s.isBase) ? BASE : s)
+  }));
+}
+function cloneDefaultDays() {
+  return normalizeDays(JSON.parse(JSON.stringify(DEFAULT_DAYS)));
+}
+function daysAreValid(arr) {
+  return Array.isArray(arr) && arr.length === DEFAULT_DAYS.length && arr.every(d =>
+    d && typeof d.title === 'string' && Array.isArray(d.stops) &&
+    d.stops.every(s => s && (s.isBase || (typeof s.name === 'string' && Number.isFinite(s.lat) && Number.isFinite(s.lng))))
+  );
+}
+function loadDays() {
+  try {
+    const raw = localStorage.getItem(DAYS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (daysAreValid(parsed)) return normalizeDays(parsed);
     }
-    const foodId = `food-${dayIdx}-${stopIdx}`;
-    const hasFood = s.food || foodSpotsHtml;
-    stopsHtml += `
+  } catch (e) { /* dati non leggibili: si riparte dall'itinerario originale */ }
+  return cloneDefaultDays();
+}
+function saveDays() {
+  try { localStorage.setItem(DAYS_KEY, JSON.stringify(days)); } catch (e) { /* storage non disponibile */ }
+}
+let days = loadDays();
+
+// ===== Disegno delle giornate =====
+const daysContainer = document.getElementById('days');
+const dayNav = document.getElementById('day-nav');
+const dayShortLabels = ["Lun 5", "Mar 6", "Mer 7", "Gio 8", "Ven 9", "Sab 10", "Dom 11"];
+let dayObserver = null;
+window.__foodSpots = [];
+
+function stopPopupHtml(s) {
+  return `<b>${esc(s.name)}</b>${s.notes ? '<br>' + esc(s.notes) : ''}${s.parking ? `<br>🅿️ ${esc(s.parking)}` : ''}${s.food ? `<br>🍽️ ${esc(s.food)}` : ''}`;
+}
+function showStop(d, i) {
+  const s = days[d] && days[d].stops[i];
+  if (s) showOnMap(s.lat, s.lng, stopPopupHtml(s));
+}
+
+function renderDays() {
+  window.__foodSpots = [];
+  daysContainer.innerHTML = '';
+  days.forEach((day, dayIdx) => {
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    card.id = `day-${dayIdx}`;
+    let stopsHtml = `<div class="meta">${day.meta ? esc(day.meta) : '🏠 Partenza e ritorno: ' + esc(BASE.name)}</div>`;
+
+    const realIdxs = [];
+    day.stops.forEach((s, k) => { if (!s.isBase) realIdxs.push(k); });
+
+    realIdxs.forEach((realIdx, pos) => {
+      const s = day.stops[realIdx];
+      const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
+      let foodSpotsHtml = '';
+      if (Array.isArray(s.foodSpots) && s.foodSpots.length) {
+        foodSpotsHtml = s.foodSpots.map(fs => {
+          const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fs.address || fs.name)}&travelmode=driving`;
+          const spotIdx = window.__foodSpots.push(fs) - 1;
+          return `<div class="fs-item">📍 <b>${esc(fs.name)}</b>${fs.desc ? `<div class="fs-desc">${esc(fs.desc)}</div>` : ''}<a href="${dirUrl}" target="_blank" rel="noopener">indicazioni ↗</a> · <a href="#" onclick="openFoodSpot(${spotIdx}, this); return false;">👁️ vedi in mappa</a></div>`;
+        }).join('') + `<div class="fs-note">Voti: TA = Tripadvisor, G = Google (rilevati a settembre 2026). Controlla gli orari prima di andare.</div>`;
+      }
+      const foodId = `food-${dayIdx}-${realIdx}`;
+      const hasFood = s.food || foodSpotsHtml;
+      stopsHtml += `
       <div class="stop">
-        <a href="#" onclick="showOnMap(${s.lat},${s.lng},\`${popupHtml.replace(/`/g, "'")}\`); return false;">👁️ ${s.name}</a>
-        · <a href="${gmapsUrl}" target="_blank">apri in Google Maps ↗</a>
-        <div class="notes">${s.notes} · (${s.lat.toFixed(4)}, ${s.lng.toFixed(4)})</div>
-        ${s.parking ? `<div class="notes">🅿️ ${s.parking}</div>` : ''}
+        <a href="#" onclick="showStop(${dayIdx},${realIdx}); return false;">👁️ ${esc(s.name)}</a>
+        · <a href="${gmapsUrl}" target="_blank" rel="noopener">apri in Google Maps ↗</a>
+        <div class="notes">${s.notes ? esc(s.notes) + ' · ' : ''}(${Number(s.lat).toFixed(4)}, ${Number(s.lng).toFixed(4)})</div>
+        ${s.parking ? `<div class="notes">🅿️ ${esc(s.parking)}</div>` : ''}
         ${hasFood ? `
           <div class="food-toggle" onclick="document.getElementById('${foodId}').classList.toggle('open'); this.classList.toggle('open');">
             <span>🍽️ Dove mangiare</span><span class="chevron">▾</span>
           </div>
           <div class="food-panel" id="${foodId}">
-            ${s.food ? `<div class="notes">${s.food}</div>` : ''}
+            ${s.food ? `<div class="notes">${esc(s.food)}</div>` : ''}
             ${foodSpotsHtml ? `<div class="notes">${foodSpotsHtml}</div>` : ''}
           </div>` : ''}
+        <div class="stop-actions">
+          <button type="button" class="mini-btn" onclick="openStopModal(${dayIdx},${realIdx})">✏️ Modifica</button>
+          <button type="button" class="mini-btn" onclick="moveStop(${dayIdx},${realIdx},-1)" title="Sposta prima" ${pos === 0 ? 'disabled' : ''}>▲</button>
+          <button type="button" class="mini-btn" onclick="moveStop(${dayIdx},${realIdx},1)" title="Sposta dopo" ${pos === realIdxs.length - 1 ? 'disabled' : ''}>▼</button>
+          <button type="button" class="mini-btn danger" onclick="deleteStop(${dayIdx},${realIdx})">🗑️ Elimina</button>
+        </div>
       </div>`;
+    });
+
+    stopsHtml += `<button type="button" class="add-stop-btn" onclick="openStopModal(${dayIdx})">➕ Aggiungi tappa</button>`;
+    card.innerHTML = `<h2>${esc(day.title)}</h2>${stopsHtml}`;
+    daysContainer.appendChild(card);
   });
-  card.innerHTML = `<h2>${day.title}</h2>${stopsHtml}`;
-  daysContainer.appendChild(card);
-});
+
+  // Evidenzia il pulsante del giorno visibile mentre si scorre
+  if (dayObserver) dayObserver.disconnect();
+  if ('IntersectionObserver' in window) {
+    dayObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const idx = entry.target.id.split('-')[1];
+        const btn = document.getElementById(`day-nav-btn-${idx}`);
+        if (btn) btn.classList.toggle('active', entry.isIntersecting);
+      });
+    }, { rootMargin: '-50% 0px -40% 0px' });
+    days.forEach((day, idx) => {
+      const el = document.getElementById(`day-${idx}`);
+      if (el) dayObserver.observe(el);
+    });
+  }
+}
 
 // ===== Barra di navigazione con un pulsante per ogni giorno =====
-const dayNav = document.getElementById('day-nav');
-const dayShortLabels = ["Lun 5", "Mar 6", "Mer 7", "Gio 8", "Ven 9", "Sab 10", "Dom 11"];
 days.forEach((day, idx) => {
   const btn = document.createElement('button');
   btn.className = 'day-nav-btn';
@@ -886,18 +1105,42 @@ days.forEach((day, idx) => {
   dayNav.appendChild(btn);
 });
 
-// Evidenzia il pulsante del giorno visibile mentre si scorre
-const dayObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    const idx = entry.target.id.split('-')[1];
-    const btn = document.getElementById(`day-nav-btn-${idx}`);
-    if (btn) btn.classList.toggle('active', entry.isIntersecting);
-  });
-}, { rootMargin: '-50% 0px -40% 0px' });
-days.forEach((day, idx) => {
-  const el = document.getElementById(`day-${idx}`);
-  if (el) dayObserver.observe(el);
-});
+renderDays();
+
+// ===== Modifica delle tappe: sposta, elimina, inserisci =====
+function refreshItinerary() {
+  renderDays();
+  renderMapLayers();
+}
+
+function insertStop(d, stop) {
+  const stops = days[d].stops;
+  const last = stops[stops.length - 1];
+  if (last && last.isBase) stops.splice(stops.length - 1, 0, stop);   // prima del rientro alla base
+  else stops.push(stop);
+}
+
+function moveStop(d, i, dir) {
+  const stops = days[d].stops;
+  const idxs = [];
+  stops.forEach((s, k) => { if (!s.isBase) idxs.push(k); });
+  const pos = idxs.indexOf(i);
+  const targetPos = pos + dir;
+  if (pos < 0 || targetPos < 0 || targetPos >= idxs.length) return;
+  const j = idxs[targetPos];
+  [stops[i], stops[j]] = [stops[j], stops[i]];
+  saveDays();
+  refreshItinerary();
+}
+
+function deleteStop(d, i) {
+  const s = days[d] && days[d].stops[i];
+  if (!s || s.isBase) return;
+  if (!confirm(`Eliminare "${s.name}" da questa giornata?`)) return;
+  days[d].stops.splice(i, 1);
+  saveDays();
+  refreshItinerary();
+}
 
 // Render Leaflet map (needs connection for tiles)
 // ===== Tooltip informativo (icona !) =====
@@ -941,7 +1184,7 @@ async function focusAddressOnMap(address, label, linkEl) {
       if (coords) onDemandGeoCache[address] = coords;
     }
     if (coords) {
-      showOnMap(coords.lat, coords.lng, `<b>${label}</b><br>${address}`);
+      showOnMap(coords.lat, coords.lng, `<b>${esc(label)}</b><br>${esc(address)}`);
     } else {
       alert('Non trovo questo punto sulla mappa interna: usa "indicazioni" per aprirlo in Google Maps.');
     }
@@ -954,7 +1197,7 @@ function openFoodSpot(i, el) {
   const fs = window.__foodSpots[i];
   if (!fs) return;
   if (typeof fs.lat === 'number' && typeof fs.lng === 'number') {
-    showOnMap(fs.lat, fs.lng, `<b>${fs.name}</b>${fs.desc ? '<br>' + fs.desc : ''}`);
+    showOnMap(fs.lat, fs.lng, `<b>${esc(fs.name)}</b>${fs.desc ? '<br>' + esc(fs.desc) : ''}`);
   } else {
     focusAddressOnMap(fs.address, fs.name, el);
   }
@@ -962,6 +1205,10 @@ function openFoodSpot(i, el) {
 window.openFoodSpot = openFoodSpot;
 window.showOnMap = showOnMap;
 let dayLayers = [];
+let selectedDayIdx = null;
+let dayLayerGroup = null;
+const dayColors = ['#c1502e', '#1a6e8e', '#7a9e3f', '#b8860b', '#8e44ad', '#2c7873', '#c94f4f'];
+
 try {
   map = L.map('map').setView([38.05, 13.0], 8);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -969,41 +1216,50 @@ try {
     maxZoom: 18
   }).addTo(map);
 
-  const colors = ['#c1502e', '#1a6e8e', '#7a9e3f', '#b8860b', '#8e44ad', '#2c7873', '#c94f4f'];
-
   // Marker fisso unico per la base
-  const baseMarker = L.marker([BASE.lat, BASE.lng]).addTo(map).bindPopup(`<b>🏠 ${BASE.name}</b><br>Partenza e ritorno giornaliero (arrivo il 5 e partenza l'11 dall'aeroporto)`);
+  L.marker([BASE.lat, BASE.lng]).addTo(map).bindPopup(`<b>🏠 ${esc(BASE.name)}</b><br>Partenza e ritorno giornaliero (arrivo il 5 e partenza l'11 dall'aeroporto)`);
 
+  dayLayerGroup = L.layerGroup().addTo(map);
+  renderMapLayers();
+} catch (e) {
+  document.getElementById('map').innerHTML = '<p style="text-align:center;padding:40px;">Mappa non disponibile senza connessione. Usa i link qui sotto.</p>';
+}
+
+// Ridisegna marker e percorsi di tutte le giornate (dopo ogni modifica alle tappe)
+function renderMapLayers() {
+  if (!map || !dayLayerGroup) return;
+  dayLayerGroup.clearLayers();
+  dayLayers = [];
   days.forEach((day, i) => {
+    const color = dayColors[i % dayColors.length];
     const latlngs = [];
     const dayMarkerList = [];
     day.stops.forEach(s => {
       latlngs.push([s.lat, s.lng]);
-      if (s !== BASE) {
+      if (!s.isBase) {
         const marker = L.circleMarker([s.lat, s.lng], {
           radius: 7,
-          fillColor: colors[i % colors.length],
+          fillColor: color,
           color: '#fff',
           weight: 2,
           fillOpacity: 0.9
-        }).addTo(map);
-        marker.bindPopup(`<b>${s.name}</b><br>${s.notes}${s.parking ? `<br>🅿️ ${s.parking}` : ''}${s.food ? `<br>🍽️ ${s.food}` : ''}`);
+        }).addTo(dayLayerGroup);
+        marker.bindPopup(stopPopupHtml(s));
         dayMarkerList.push(marker);
       }
     });
     let line = null;
     if (latlngs.length > 1) {
-      line = L.polyline(latlngs, { color: colors[i % colors.length], weight: 3, opacity: 0.6, dashArray: '6,6' }).addTo(map);
+      line = L.polyline(latlngs, { color, weight: 3, opacity: 0.6, dashArray: '6,6' }).addTo(dayLayerGroup);
     }
     dayLayers.push({ line, markers: dayMarkerList, bounds: L.latLngBounds(latlngs) });
   });
-} catch (e) {
-  document.getElementById('map').innerHTML = '<p style="text-align:center;padding:40px;">Mappa non disponibile senza connessione. Usa i link qui sotto.</p>';
+  // Se un giorno era evidenziato, mantiene l'evidenziazione senza spostare la mappa
+  if (selectedDayIdx !== null && dayLayers[selectedDayIdx]) focusDayOnMap(selectedDayIdx, true);
 }
 
 // ===== Evidenzia sulla mappa solo il giorno selezionato =====
-let selectedDayIdx = null;
-function focusDayOnMap(idx) {
+function focusDayOnMap(idx, noFit) {
   if (!map || !dayLayers.length) return;
   selectedDayIdx = idx;
   dayLayers.forEach((dl, i) => {
@@ -1012,7 +1268,7 @@ function focusDayOnMap(idx) {
     dl.markers.forEach(m => m.setStyle({ opacity: isSelected ? 1 : 0.15, fillOpacity: isSelected ? 0.9 : 0.1 }));
   });
   const targetBounds = dayLayers[idx].bounds;
-  if (targetBounds.isValid()) {
+  if (!noFit && targetBounds.isValid()) {
     map.fitBounds(targetBounds.pad(0.25));
   }
 }
@@ -1064,6 +1320,12 @@ function saveCustomPlaces(places) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(places));
 }
 
+let editingPlaceIdx = null;
+
+function placePopupHtml(p, num) {
+  return `<b>#${num} — ${esc(p.name)}</b><br>${esc(p.address)}${p.notes ? '<br>' + esc(p.notes) : ''}`;
+}
+
 function renderCustomPlaces() {
   const places = loadCustomPlaces();
   const visitaList = document.getElementById('custom-visita-list');
@@ -1085,38 +1347,46 @@ function renderCustomPlaces() {
     const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=driving`;
     const item = document.createElement('div');
     item.className = 'custom-item';
-    const popupHtml = `<b>#${num} — ${p.name}</b><br>${p.address}${p.notes ? '<br>' + p.notes : ''}`;
-    let viewLink;
-    if (p.lat && p.lng) {
-      viewLink = `<a href="#" class="view-map-link" data-lat="${p.lat}" data-lng="${p.lng}" data-popup="${popupHtml.replace(/"/g, '&quot;')}">👁️ vedi in mappa</a>`;
-    } else {
-      viewLink = `<a href="#" onclick="focusAddressOnMap('${p.address.replace(/'/g, "\\'")}','${p.name.replace(/'/g, "\\'")}',this); return false;">👁️ vedi in mappa</a>`;
-    }
     item.innerHTML = `
       <div class="num-badge">${num}</div>
       <div class="info">
-        <a href="${dirUrl}" target="_blank">${p.category === 'visita' ? '🏛️' : '🍽️'} ${p.name} — indicazioni ↗</a>
-        · ${viewLink}
-        <div class="notes">${p.address}${p.notes ? ' · ' + p.notes : ''}</div>
+        <a href="${dirUrl}" target="_blank" rel="noopener">${p.category === 'visita' ? '🏛️' : '🍽️'} ${esc(p.name)} — indicazioni ↗</a>
+        · <a href="#" class="view-place-link" data-idx="${idx}">👁️ vedi in mappa</a>
+        <div class="notes">${esc(p.address)}${p.notes ? ' · ' + esc(p.notes) : ''}</div>
       </div>
-      <button class="del-btn" data-idx="${idx}" title="Rimuovi">✕</button>
+      <div class="item-actions">
+        <button type="button" class="edit-place-btn" data-idx="${idx}" title="Modifica">✏️</button>
+        <button type="button" class="del-btn" data-idx="${idx}" title="Rimuovi">✕</button>
+      </div>
     `;
     targetList.appendChild(item);
   });
 
-  // Collega i link "vedi in mappa" con coordinate già note
-  document.querySelectorAll('.view-map-link').forEach(link => {
+  // "Vedi in mappa": usa le coordinate note, altrimenti cerca l'indirizzo al volo
+  document.querySelectorAll('.view-place-link').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      showOnMap(parseFloat(link.dataset.lat), parseFloat(link.dataset.lng), link.dataset.popup);
+      const idx = parseInt(link.dataset.idx, 10);
+      const p = loadCustomPlaces()[idx];
+      if (!p) return;
+      if (p.lat && p.lng) showOnMap(p.lat, p.lng, placePopupHtml(p, idx + 1));
+      else focusAddressOnMap(p.address, p.name, link);
     });
   });
 
-  // Bottoni rimozione
+  // Modifica
+  document.querySelectorAll('.edit-place-btn').forEach(btn => {
+    btn.addEventListener('click', () => openPlaceModal(parseInt(btn.dataset.idx, 10)));
+  });
+
+  // Rimozione
   document.querySelectorAll('.del-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const places = loadCustomPlaces();
       const idx = parseInt(btn.dataset.idx, 10);
+      const p = places[idx];
+      if (!p) return;
+      if (!confirm(`Eliminare "${p.name}"?`)) return;
       places.splice(idx, 1);
       saveCustomPlaces(places);
       renderCustomPlaces();
@@ -1137,7 +1407,7 @@ function renderCustomPlaces() {
           iconAnchor: [20, 35]
         });
         const marker = L.marker([p.lat, p.lng], { icon }).addTo(map);
-        marker.bindPopup(`<b>#${num} — ${p.name}</b><br>${p.address}${p.notes ? '<br>' + p.notes : ''}`);
+        marker.bindPopup(placePopupHtml(p, num));
         customMarkers.push(marker);
       }
     });
@@ -1155,66 +1425,341 @@ async function geocodeAddress(address) {
   return null;
 }
 
-// ===== Apertura/chiusura finestra modale per aggiungere un luogo =====
+// ===== Finestra per aggiungere / modificare un luogo suggerito =====
 const modalOverlay = document.getElementById('add-modal-overlay');
-document.getElementById('fab-add-btn').addEventListener('click', () => {
+
+function openPlaceModal(idx) {
+  const isEdit = typeof idx === 'number';
+  const p = isEdit ? loadCustomPlaces()[idx] : null;
+  if (isEdit && !p) return;
+  editingPlaceIdx = isEdit ? idx : null;
+  document.getElementById('place-modal-title').textContent = isEdit ? '✏️ Modifica luogo' : '➕ Aggiungi un luogo suggerito da un amico';
+  document.getElementById('place-submit-btn').textContent = isEdit ? 'Salva modifiche' : 'Aggiungi alla mappa';
+  document.getElementById('place-name').value = p ? p.name : '';
+  document.getElementById('place-category').value = p ? p.category : 'visita';
+  document.getElementById('place-address').value = p ? p.address : '';
+  document.getElementById('place-notes').value = p ? (p.notes || '') : '';
+  const statusEl = document.getElementById('add-status');
+  statusEl.textContent = '';
+  statusEl.className = 'add-status';
   modalOverlay.classList.add('open');
-});
-document.getElementById('modal-close-btn').addEventListener('click', () => {
+}
+function closePlaceModal() {
   modalOverlay.classList.remove('open');
-});
+  editingPlaceIdx = null;
+}
+
+document.getElementById('fab-add-btn').addEventListener('click', () => openPlaceModal());
+document.getElementById('modal-close-btn').addEventListener('click', closePlaceModal);
 modalOverlay.addEventListener('click', (e) => {
-  if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+  if (e.target === modalOverlay) closePlaceModal();
 });
 
 document.getElementById('add-place-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const nameInput = document.getElementById('place-name');
-  const categoryInput = document.getElementById('place-category');
-  const addressInput = document.getElementById('place-address');
-  const notesInput = document.getElementById('place-notes');
   const statusEl = document.getElementById('add-status');
+  const submitBtn = document.getElementById('place-submit-btn');
 
-  const name = nameInput.value.trim();
-  const category = categoryInput.value;
-  const address = addressInput.value.trim();
-  const notes = notesInput.value.trim();
-
+  const name = document.getElementById('place-name').value.trim();
+  const category = document.getElementById('place-category').value;
+  const address = document.getElementById('place-address').value.trim();
+  const notes = document.getElementById('place-notes').value.trim();
   if (!name || !address) return;
 
-  statusEl.textContent = 'Cerco l\'indirizzo sulla mappa...';
-  statusEl.className = 'add-status';
+  const editIdx = editingPlaceIdx;
+  const isEdit = editIdx !== null;
+  const oldPlace = isEdit ? loadCustomPlaces()[editIdx] : null;
+  if (isEdit && !oldPlace) { closePlaceModal(); return; }
 
+  submitBtn.disabled = true;
   let coords = null;
-  try {
-    coords = await geocodeAddress(address);
-  } catch (err) {
-    coords = null;
+  if (isEdit && oldPlace.lat && oldPlace.lng && oldPlace.address === address) {
+    coords = { lat: oldPlace.lat, lng: oldPlace.lng };       // indirizzo invariato: tengo la posizione
+  } else {
+    statusEl.textContent = 'Cerco l\'indirizzo sulla mappa...';
+    statusEl.className = 'add-status';
+    try {
+      coords = await geocodeAddress(address);
+    } catch (err) {
+      coords = null;
+    }
   }
 
   const places = loadCustomPlaces();
-  places.push({
+  const entry = {
     name, category, address, notes,
     lat: coords ? coords.lat : null,
     lng: coords ? coords.lng : null
-  });
+  };
+  if (isEdit && places[editIdx]) places[editIdx] = entry;
+  else places.push(entry);
   saveCustomPlaces(places);
   renderCustomPlaces();
 
   if (coords && map) {
-    map.setView([coords.lat, coords.lng], 13);
-    statusEl.textContent = '✅ Aggiunto e trovato sulla mappa!';
+    if (!isEdit) map.setView([coords.lat, coords.lng], 13);
+    statusEl.textContent = isEdit ? '✅ Modifiche salvate!' : '✅ Aggiunto e trovato sulla mappa!';
     statusEl.className = 'add-status ok';
   } else {
-    statusEl.textContent = '⚠️ Aggiunto alla lista, ma non trovato sulla mappa (controlla l\'indirizzo). Il link alle indicazioni funziona comunque.';
+    statusEl.textContent = '⚠️ Salvato nella lista, ma non trovato sulla mappa (controlla l\'indirizzo). Il link alle indicazioni funziona comunque.';
     statusEl.className = 'add-status error';
   }
 
-  nameInput.value = '';
-  addressInput.value = '';
-  notesInput.value = '';
-  setTimeout(() => { modalOverlay.classList.remove('open'); statusEl.textContent = ''; }, 1400);
+  submitBtn.disabled = false;
+  document.getElementById('place-name').value = '';
+  document.getElementById('place-address').value = '';
+  document.getElementById('place-notes').value = '';
+  setTimeout(() => { closePlaceModal(); statusEl.textContent = ''; }, 1400);
 });
+
+// ===== Finestra per aggiungere / modificare una tappa del tour =====
+let editingStop = null;   // { d: giorno, i: indice tappa oppure null se nuova }
+const stopModalOverlay = document.getElementById('stop-modal-overlay');
+
+function parseCoords(text) {
+  const m = String(text || '').trim().match(/^(-?\d{1,3}(?:\.\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:\.\d+)?)$/);
+  if (!m) return null;
+  const lat = parseFloat(m[1]);
+  const lng = parseFloat(m[2]);
+  if (!(lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180)) return null;
+  return { lat, lng };
+}
+
+function setStopStatus(text, kind) {
+  const el = document.getElementById('stop-status');
+  el.textContent = text || '';
+  el.className = 'add-status' + (kind ? ' ' + kind : '');
+}
+
+function openStopModal(d, i) {
+  const isEdit = typeof i === 'number';
+  const s = isEdit ? days[d].stops[i] : null;
+  if (isEdit && (!s || s.isBase)) return;
+  editingStop = { d, i: isEdit ? i : null };
+
+  const sel = document.getElementById('stop-day');
+  sel.innerHTML = days.map((day, k) =>
+    `<option value="${k}">${esc(dayShortLabels[k] || ('Giorno ' + (k + 1)))} — ${esc(day.title.replace(/^[^—]*—\s*/, ''))}</option>`
+  ).join('');
+  sel.value = String(d);
+
+  document.getElementById('stop-modal-title').textContent = isEdit ? '✏️ Modifica tappa' : '➕ Aggiungi tappa';
+  document.getElementById('stop-name').value = s ? s.name : '';
+  document.getElementById('stop-address').value = '';
+  document.getElementById('stop-coords').value = '';
+  document.getElementById('stop-notes').value = s ? (s.notes || '') : '';
+  document.getElementById('stop-parking').value = s ? (s.parking || '') : '';
+  document.getElementById('stop-food').value = s ? (s.food || '') : '';
+  document.getElementById('stop-address-label').textContent = isEdit
+    ? 'Nuovo indirizzo o zona (lascia vuoto per non spostare il punto)'
+    : 'Indirizzo o zona (per trovarlo sulla mappa)';
+  document.getElementById('stop-current-pos').textContent = isEdit
+    ? `Posizione attuale: ${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}`
+    : 'Se l\'indirizzo non si trova, incolla le coordinate copiate da Google Maps (tieni premuto sul punto).';
+  setStopStatus('');
+  stopModalOverlay.classList.add('open');
+}
+function closeStopModal() {
+  stopModalOverlay.classList.remove('open');
+  editingStop = null;
+}
+
+document.getElementById('stop-modal-close-btn').addEventListener('click', closeStopModal);
+stopModalOverlay.addEventListener('click', (e) => {
+  if (e.target === stopModalOverlay) closeStopModal();
+});
+
+document.getElementById('stop-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!editingStop) return;
+  const ctx = { d: editingStop.d, i: editingStop.i };
+  const isEdit = ctx.i !== null;
+  const btn = document.getElementById('stop-submit-btn');
+
+  const name = document.getElementById('stop-name').value.trim();
+  const address = document.getElementById('stop-address').value.trim();
+  const coordsTxt = document.getElementById('stop-coords').value.trim();
+  const notes = document.getElementById('stop-notes').value.trim();
+  const parking = document.getElementById('stop-parking').value.trim();
+  const food = document.getElementById('stop-food').value.trim();
+  const targetDay = parseInt(document.getElementById('stop-day').value, 10);
+  if (!name) return;
+
+  const manual = coordsTxt ? parseCoords(coordsTxt) : null;
+  if (coordsTxt && !manual) {
+    setStopStatus('Coordinate non valide. Usa il formato 38.1157, 13.3615', 'error');
+    return;
+  }
+  const orig = isEdit ? (days[ctx.d] && days[ctx.d].stops[ctx.i]) : null;
+  if (isEdit && (!orig || orig.isBase)) { closeStopModal(); return; }
+
+  btn.disabled = true;
+  let pos = null;
+  if (manual) {
+    pos = manual;
+  } else if (address) {
+    setStopStatus('Cerco l\'indirizzo sulla mappa...');
+    try { pos = await geocodeAddress(address); } catch (err) { pos = null; }
+    if (!pos) {
+      setStopStatus('Non trovo questo indirizzo. Prova con un nome più semplice (es. "Piazza Duomo, Trapani") oppure incolla le coordinate.', 'error');
+      btn.disabled = false;
+      return;
+    }
+  } else if (isEdit) {
+    pos = { lat: orig.lat, lng: orig.lng };
+  } else {
+    setStopStatus('Inserisci un indirizzo oppure le coordinate.', 'error');
+    btn.disabled = false;
+    return;
+  }
+
+  if (isEdit) {
+    Object.assign(orig, { name, lat: pos.lat, lng: pos.lng, notes });
+    if (parking) orig.parking = parking; else delete orig.parking;
+    if (food) orig.food = food; else delete orig.food;
+    if (targetDay !== ctx.d) {
+      days[ctx.d].stops.splice(ctx.i, 1);
+      insertStop(targetDay, orig);
+    }
+  } else {
+    const stop = { name, lat: pos.lat, lng: pos.lng, notes };
+    if (parking) stop.parking = parking;
+    if (food) stop.food = food;
+    insertStop(targetDay, stop);
+  }
+  saveDays();
+  refreshItinerary();
+
+  btn.disabled = false;
+  setStopStatus(isEdit ? '✅ Tappa aggiornata' : '✅ Tappa aggiunta', 'ok');
+  setTimeout(() => { closeStopModal(); setStopStatus(''); }, 700);
+});
+
+// ===== Esporta / importa / ripristina =====
+function buildExport() {
+  let seeded = [];
+  try { seeded = JSON.parse(localStorage.getItem(STORAGE_KEY + '-seeded-names') || '[]'); } catch (e) { seeded = []; }
+  return {
+    app: 'itinerario-palermo',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    days,
+    places: loadCustomPlaces(),
+    seededNames: seeded
+  };
+}
+
+async function exportData() {
+  const json = JSON.stringify(buildExport(), null, 2);
+  try {
+    const file = new File([json], 'itinerario-palermo.json', { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Itinerario Palermo' });
+      return;
+    }
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;   // l'utente ha chiuso il menu di condivisione
+  }
+  const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'itinerario-palermo.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); } catch (e) { alert('File non valido.'); return; }
+    const placesOk = data && Array.isArray(data.places) && data.places.every(p =>
+      p && typeof p.name === 'string' && typeof p.address === 'string' && (p.category === 'visita' || p.category === 'cibo'));
+    if (!data || !daysAreValid(data.days) || !placesOk) {
+      alert('Questo file non sembra un itinerario di questa pagina.');
+      return;
+    }
+    if (!confirm('Importare questo file? Sostituirà itinerario e luoghi aggiunti presenti su questo dispositivo.')) return;
+    days = normalizeDays(data.days);
+    saveDays();
+    saveCustomPlaces(data.places.map(p => ({
+      name: p.name,
+      category: p.category,
+      address: p.address,
+      notes: typeof p.notes === 'string' ? p.notes : '',
+      lat: Number.isFinite(p.lat) ? p.lat : null,
+      lng: Number.isFinite(p.lng) ? p.lng : null
+    })));
+    localStorage.setItem(STORAGE_KEY + '-seeded-names', JSON.stringify(
+      Array.isArray(data.seededNames) ? data.seededNames : DEFAULT_PLACES.map(p => p.name)
+    ));
+    refreshItinerary();
+    renderCustomPlaces();
+    alert('Importato.');
+  };
+  reader.readAsText(file);
+}
+
+function resetItinerary() {
+  if (!confirm('Ripristinare l\'itinerario originale? Le modifiche alle tappe andranno perse (i luoghi aggiunti restano).')) return;
+  try { localStorage.removeItem(DAYS_KEY); } catch (e) { /* ignora */ }
+  days = cloneDefaultDays();
+  refreshItinerary();
+}
+
+document.getElementById('export-btn').addEventListener('click', exportData);
+document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
+document.getElementById('import-file').addEventListener('change', (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (file) importData(file);
+  e.target.value = '';
+});
+document.getElementById('reset-btn').addEventListener('click', resetItinerary);
+
+// ===== Installazione come app (Android, iPhone, computer) =====
+let deferredInstallPrompt = null;
+const installBar = document.getElementById('install-bar');
+const installBtn = document.getElementById('install-btn');
+const installHelp = document.getElementById('install-help');
+const isStandalone = () =>
+  (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+const ua = navigator.userAgent || '';
+const isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = /android/i.test(ua);
+
+function updateInstallBar() {
+  if (isStandalone()) { installBar.style.display = 'none'; return; }
+  installBar.style.display = 'block';
+  installBtn.textContent = deferredInstallPrompt ? '📲 Installa l\'app' : '📲 Come installare l\'app';
+}
+installHelp.textContent = isIOS
+  ? 'Su iPhone/iPad apri questa pagina con Safari, tocca Condividi (il quadrato con la freccia) e scegli «Aggiungi a Home». Poi aprila una volta con la rete, così la mappa resta disponibile anche con poca copertura.'
+  : isAndroid
+    ? 'Su Android, con Chrome, tocca il menu ⋮ in alto a destra e scegli «Installa app» (o «Aggiungi a schermata Home»). Poi aprila una volta con la rete, così la mappa resta disponibile anche con poca copertura.'
+    : 'Su computer, con Chrome o Edge, clicca l\'icona di installazione a destra nella barra degli indirizzi (o menu ⋮ → «Installa…»). Su iPhone usa Safari: Condividi → «Aggiungi a Home».';
+
+installBtn.addEventListener('click', async () => {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    try { await deferredInstallPrompt.userChoice; } catch (e) { /* ignora */ }
+    deferredInstallPrompt = null;
+    updateInstallBar();
+  } else {
+    installHelp.classList.toggle('open');
+  }
+});
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  updateInstallBar();
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  installBar.style.display = 'none';
+});
+updateInstallBar();
 
 // ===== Segnalazioni street food/tipici da fonti verificate (pre-caricate al primo avvio) =====
 const DEFAULT_PLACES = [
@@ -1250,26 +1795,25 @@ async function seedDefaultPlaces() {
   localStorage.setItem(STORAGE_KEY + '-seeded-names', JSON.stringify([...seededNames]));
 }
 
-// Geocodifica in sequenza i luoghi senza coordinate (rispettando i limiti di Nominatim)
+// Geocodifica in sequenza i luoghi senza coordinate (rispettando i limiti di Nominatim).
+// Rilegge i luoghi salvati prima di ogni aggiornamento, così non cancella modifiche fatte nel frattempo.
 async function geocodeMissingCoords() {
-  const places = loadCustomPlaces();
-  let changed = false;
-  for (let i = 0; i < places.length; i++) {
-    if (!places[i].lat || !places[i].lng) {
-      try {
-        const coords = await geocodeAddress(places[i].address);
-        if (coords) {
-          places[i].lat = coords.lat;
-          places[i].lng = coords.lng;
-          changed = true;
-        }
-      } catch (e) { /* ignora e prosegue */ }
-      await new Promise(r => setTimeout(r, 1100)); // rispetta il limite di 1 richiesta/secondo
+  const snapshot = loadCustomPlaces();
+  for (const p of snapshot) {
+    if (p.lat && p.lng) continue;
+    let coords = null;
+    try { coords = await geocodeAddress(p.address); } catch (e) { /* ignora e prosegue */ }
+    if (coords) {
+      const current = loadCustomPlaces();
+      const target = current.find(q => q.name === p.name && q.address === p.address && !(q.lat && q.lng));
+      if (target) {
+        target.lat = coords.lat;
+        target.lng = coords.lng;
+        saveCustomPlaces(current);
+        renderCustomPlaces();
+      }
     }
-  }
-  if (changed) {
-    saveCustomPlaces(places);
-    renderCustomPlaces();
+    await new Promise(r => setTimeout(r, 1100)); // rispetta il limite di 1 richiesta/secondo
   }
 }
 
