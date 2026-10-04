@@ -1,6 +1,6 @@
 // Service worker: l'app si apre anche senza connessione (le tile della mappa
 // già visualizzate restano in cache; la ricerca di nuovi indirizzi richiede rete).
-const CACHE = 'palermo-itinerario-v4';
+const CACHE = 'palermo-itinerario-v5';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 // Librerie della mappa: salvate subito, così la pagina funziona offline anche al primo riavvio
 const CDN = [
