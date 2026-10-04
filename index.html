@@ -381,29 +381,6 @@
   .modal-box .hint { font-size: 0.78rem; color: #777; }
   .modal-box button[type="submit"]:disabled { opacity: 0.6; }
 
-  .data-tools {
-    margin: 14px 16px;
-    background: white;
-    border-radius: 10px;
-    padding: 14px 16px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  }
-  .data-tools h3 { margin: 0 0 6px; font-size: 1rem; color: var(--sea); }
-  .data-tools p { margin: 0 0 10px; font-size: 0.82rem; color: #555; line-height: 1.4; }
-  .data-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
-  .data-buttons button {
-    background: #eef5f8;
-    color: var(--sea);
-    border: none;
-    border-radius: 8px;
-    padding: 9px 14px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .data-buttons button.danger { background: #fdf3ec; color: var(--terracotta); }
-  .data-buttons button:active { opacity: 0.8; }
-
   .install-bar { text-align: center; padding: 10px 16px 0; }
   #install-btn {
     background: var(--terracotta);
@@ -450,6 +427,28 @@
     pointer-events: none;
     box-shadow: 0 1px 4px rgba(0,0,0,0.2);
   }
+
+  /* ===== Sincronizzazione ===== */
+  .sync-bar { text-align: center; padding: 8px 16px 0; }
+  #sync-btn {
+    background: #fff;
+    border: 2px solid var(--terracotta);
+    color: var(--terracotta);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  #sync-btn.sync-ok { border-color: #5a8a3c; color: #3f6b27; }
+  #sync-btn.sync-busy { border-color: #999; color: #666; }
+  #sync-btn.sync-error { border-color: #b3261e; color: #b3261e; }
+  .sync-action {
+    width: 100%; margin-top: 10px; padding: 11px; border: none; border-radius: 8px;
+    background: var(--terracotta); color: #fff; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  }
+  #sync-connect-box, #sync-linked-box { display: none; }
+  .sync-err { color: #b3261e; }
 </style>
 </head>
 <body>
@@ -459,6 +458,10 @@
   <p>5–11 ottobre 2026 · Base: San Martino delle Scale (Monreale)</p>
 </header>
 
+<div class="sync-bar">
+  <button type="button" id="sync-btn" class="sync-off">☁️ Collega la sincronizzazione</button>
+</div>
+
 <div class="install-bar" id="install-bar">
   <button type="button" id="install-btn">📲 Come installare l'app</button>
   <div class="install-help" id="install-help"></div>
@@ -467,7 +470,7 @@
 <div class="info-badge-wrap">
   <button class="info-badge" id="info-badge-btn" title="Informazioni">!</button>
   <div class="info-tooltip" id="info-tooltip">
-    📍 La mappa qui sotto richiede connessione internet per caricare le tile e per cercare nuovi indirizzi. La lista con i link a Google Maps funziona sempre, anche senza connessione. I luoghi che aggiungi e le modifiche alle tappe restano salvati su questo dispositivo anche se chiudi la pagina. I voti dei locali (TA = Tripadvisor, G = Google) sono stati rilevati a settembre 2026: verifica sempre gli orari.
+    📍 La mappa qui sotto richiede connessione internet per caricare le tile e per cercare nuovi indirizzi. La lista con i link a Google Maps funziona sempre, anche senza connessione. I luoghi che aggiungi e le modifiche alle tappe restano salvati su questo dispositivo anche se chiudi la pagina; con la sincronizzazione attiva (pulsante ☁️) vengono condivisi con gli altri telefoni. I voti dei locali (TA = Tripadvisor, G = Google) sono stati rilevati a settembre 2026: verifica sempre gli orari.
   </div>
 </div>
 
@@ -543,6 +546,28 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="sync-modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>☁️ Sincronizzazione</h2>
+      <button type="button" class="modal-close" id="sync-modal-close-btn">✕</button>
+    </div>
+    <div class="hint" id="sync-status-text"></div>
+    <div id="sync-connect-box">
+      <label>Codice del viaggio</label>
+      <input type="text" id="sync-code-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Incolla il codice">
+      <button type="button" id="sync-connect-btn" class="sync-action">Collega</button>
+    </div>
+    <div id="sync-linked-box">
+      <button type="button" id="sync-now-btn" class="sync-action">Sincronizza ora</button>
+      <label>Link di invito per gli altri telefoni</label>
+      <input type="text" id="sync-invite-link" readonly>
+      <button type="button" id="sync-invite-btn" class="sync-action">Condividi / copia link</button>
+      <button type="button" id="sync-disconnect-btn" class="mini-btn danger" style="margin-top:14px">Scollega questo telefono</button>
+    </div>
+  </div>
+</div>
+
 <div id="custom-visita" class="custom-group" style="display:none;">
   <h2>🏛️ Luoghi da visitare (aggiunti)</h2>
   <div id="custom-visita-list"></div>
@@ -556,17 +581,6 @@
 </div>
 
 <div id="days"></div>
-
-<div class="data-tools">
-  <h3>Gestione dati</h3>
-  <p>Le modifiche restano su questo telefono. Per condividerle con gli altri, esporta il file e invialo (per esempio su WhatsApp): chi lo riceve lo importa da qui.</p>
-  <div class="data-buttons">
-    <button type="button" id="export-btn">⬆️ Esporta</button>
-    <button type="button" id="import-btn">⬇️ Importa</button>
-    <button type="button" id="reset-btn" class="danger">↺ Ripristina itinerario originale</button>
-    <input type="file" id="import-file" accept=".json,application/json" hidden>
-  </div>
-</div>
 
 <footer>Installa l'app sul telefono/PC per averla sempre a disposizione durante il viaggio.</footer>
 
@@ -995,6 +1009,28 @@ function esc(s) {
   ));
 }
 
+// ===== Identificativi stabili (servono per sincronizzare tra telefoni) =====
+function newId() {
+  return 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+function slug(t) {
+  return String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+function placeIdFor(name) { return 'p-' + slug(name); }
+// Luoghi salvati prima della sincronizzazione: assegna e salva gli id
+function ensurePlaceIds(arr) {
+  const used = new Set(arr.map(p => p && p.id).filter(Boolean));
+  let changed = false;
+  arr.forEach(p => {
+    if (!p || p.id) return;
+    let id = DEFAULT_PLACES.some(dp => dp.name === p.name) ? placeIdFor(p.name) : newId();
+    if (used.has(id)) id = newId();
+    p.id = id; used.add(id); changed = true;
+  });
+  if (changed) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (e) { /* ignora */ } }
+  return arr;
+}
+
 // ===== Itinerario modificabile (salvato su questo dispositivo) =====
 const DAYS_KEY = 'palermo-itinerario-giorni';
 
@@ -1005,7 +1041,20 @@ function normalizeDays(arr) {
   }));
 }
 function cloneDefaultDays() {
-  return normalizeDays(JSON.parse(JSON.stringify(DEFAULT_DAYS)));
+  const c = JSON.parse(JSON.stringify(DEFAULT_DAYS));
+  c.forEach((day, d) => day.stops.forEach((st, k) => { if (!st.isBase) st.id = 'd' + d + 's' + k; }));
+  return normalizeDays(c);
+}
+// Dati salvati prima della sincronizzazione: assegna gli id (le tappe originali ritrovano il loro id fisso)
+function ensureStopIds(arr) {
+  let changed = false;
+  arr.forEach((day, d) => day.stops.forEach(st => {
+    if (st.isBase || st.id) return;
+    const orig = DEFAULT_DAYS[d].stops.findIndex(o => !o.isBase && o.name === st.name && o.lat === st.lat && o.lng === st.lng);
+    st.id = orig >= 0 ? 'd' + d + 's' + orig : newId();
+    changed = true;
+  }));
+  return changed;
 }
 function daysAreValid(arr) {
   return Array.isArray(arr) && arr.length === DEFAULT_DAYS.length && arr.every(d =>
@@ -1018,7 +1067,10 @@ function loadDays() {
     const raw = localStorage.getItem(DAYS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (daysAreValid(parsed)) return normalizeDays(parsed);
+      if (daysAreValid(parsed)) {
+        if (ensureStopIds(parsed)) localStorage.setItem(DAYS_KEY, JSON.stringify(parsed));
+        return normalizeDays(parsed);
+      }
     }
   } catch (e) { /* dati non leggibili: si riparte dall'itinerario originale */ }
   return cloneDefaultDays();
@@ -1128,41 +1180,99 @@ days.forEach((day, idx) => {
 
 renderDays();
 
-// ===== Modifica delle tappe: sposta, elimina, inserisci =====
+// ===== Modifica delle tappe: ogni modifica è una "operazione" (vedi sincronizzazione) =====
 function refreshItinerary() {
   renderDays();
   renderMapLayers();
 }
 
-function insertStop(d, stop) {
-  const stops = days[d].stops;
+function insertInto(stops, stop) {
   const last = stops[stops.length - 1];
   if (last && last.isBase) stops.splice(stops.length - 1, 0, stop);   // prima del rientro alla base
   else stops.push(stop);
 }
+function findStopLoc(st, id) {
+  for (let d = 0; d < st.days.length; d++) {
+    const i = st.days[d].stops.findIndex(x => !x.isBase && x.id === id);
+    if (i >= 0) return { d, i };
+  }
+  return null;
+}
+function findStopById(id) {
+  const loc = findStopLoc({ days }, id);
+  return loc ? { d: loc.d, i: loc.i, stop: days[loc.d].stops[loc.i] } : null;
+}
+
+// Applica un'operazione a uno stato { days, places }. Sicura se ripetuta o se l'elemento non esiste più.
+function applyOp(st, op) {
+  switch (op.t) {
+    case 'addStop':
+      if (!findStopLoc(st, op.stop.id) && st.days[op.day]) insertInto(st.days[op.day].stops, op.stop);
+      break;
+    case 'setStop': {
+      const loc = findStopLoc(st, op.id);
+      if (!loc) break;
+      const stop = st.days[loc.d].stops[loc.i];
+      Object.assign(stop, op.set || {});
+      (op.del || []).forEach(k => { delete stop[k]; });
+      break;
+    }
+    case 'moveDay': {
+      const loc = findStopLoc(st, op.id);
+      if (!loc || !st.days[op.day] || loc.d === op.day) break;
+      const [stop] = st.days[loc.d].stops.splice(loc.i, 1);
+      insertInto(st.days[op.day].stops, stop);
+      break;
+    }
+    case 'moveStop': {
+      const loc = findStopLoc(st, op.id);
+      if (!loc) break;
+      const stops = st.days[loc.d].stops;
+      const idxs = [];
+      stops.forEach((x, k) => { if (!x.isBase) idxs.push(k); });
+      const target = idxs.indexOf(loc.i) + op.dir;
+      if (target < 0 || target >= idxs.length) break;
+      const j = idxs[target];
+      [stops[loc.i], stops[j]] = [stops[j], stops[loc.i]];
+      break;
+    }
+    case 'delStop': {
+      const loc = findStopLoc(st, op.id);
+      if (loc) st.days[loc.d].stops.splice(loc.i, 1);
+      break;
+    }
+    case 'addPlace':
+      if (!st.places.some(p => p.id === op.place.id)) st.places.push(op.place);
+      break;
+    case 'setPlace': {
+      const p = st.places.find(x => x.id === op.id);
+      if (p) Object.assign(p, op.set || {});
+      break;
+    }
+    case 'coords': {
+      const p = st.places.find(x => x.id === op.id);
+      if (p && !(p.lat && p.lng)) { p.lat = op.lat; p.lng = op.lng; }
+      break;
+    }
+    case 'delPlace': {
+      const k = st.places.findIndex(x => x.id === op.id);
+      if (k >= 0) st.places.splice(k, 1);
+      break;
+    }
+  }
+}
 
 function moveStop(d, i, dir) {
-  const stops = days[d].stops;
-  const idxs = [];
-  stops.forEach((s, k) => { if (!s.isBase) idxs.push(k); });
-  const pos = idxs.indexOf(i);
-  const targetPos = pos + dir;
-  if (pos < 0 || targetPos < 0 || targetPos >= idxs.length) return;
-  const j = idxs[targetPos];
-  [stops[i], stops[j]] = [stops[j], stops[i]];
-  saveDays();
-  refreshItinerary();
+  const s = days[d] && days[d].stops[i];
+  if (s && !s.isBase) dispatchOp({ t: 'moveStop', id: s.id, dir });
 }
 
 function deleteStop(d, i) {
   const s = days[d] && days[d].stops[i];
   if (!s || s.isBase) return;
   if (!confirm(`Eliminare "${s.name}" da questa giornata?`)) return;
-  days[d].stops.splice(i, 1);
-  saveDays();
-  refreshItinerary();
+  dispatchOp({ t: 'delStop', id: s.id });
 }
-
 // Render Leaflet map (needs connection for tiles)
 // ===== Tooltip informativo (icona !) =====
 const infoTooltip = document.getElementById('info-tooltip');
@@ -1349,7 +1459,7 @@ let customMarkers = [];
 
 function loadCustomPlaces() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    return ensurePlaceIds(JSON.parse(localStorage.getItem(STORAGE_KEY)) || []);
   } catch (e) {
     return [];
   }
@@ -1359,7 +1469,7 @@ function saveCustomPlaces(places) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(places));
 }
 
-let editingPlaceIdx = null;
+let editingPlaceId = null;
 
 function placePopupHtml(p, num) {
   return `<b>#${num} — ${esc(p.name)}</b><br>${esc(p.address)}${p.notes ? '<br>' + esc(p.notes) : ''}`;
@@ -1382,6 +1492,7 @@ function renderCustomPlaces() {
 
   places.forEach((p, idx) => {
     const num = idx + 1;
+    const pid = esc(p.id);
     const targetList = p.category === 'visita' ? visitaList : ciboList;
     const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}&travelmode=driving`;
     const item = document.createElement('div');
@@ -1390,12 +1501,12 @@ function renderCustomPlaces() {
       <div class="num-badge">${num}</div>
       <div class="info">
         <a href="${dirUrl}" target="_blank" rel="noopener">${p.category === 'visita' ? '🏛️' : '🍽️'} ${esc(p.name)} — indicazioni ↗</a>
-        · <a href="#" class="view-place-link" data-idx="${idx}">👁️ vedi in mappa</a>
+        · <a href="#" class="view-place-link" data-id="${pid}">👁️ vedi in mappa</a>
         <div class="notes">${esc(p.address)}${p.notes ? ' · ' + esc(p.notes) : ''}</div>
       </div>
       <div class="item-actions">
-        <button type="button" class="edit-place-btn" data-idx="${idx}" title="Modifica">✏️</button>
-        <button type="button" class="del-btn" data-idx="${idx}" title="Rimuovi">✕</button>
+        <button type="button" class="edit-place-btn" data-id="${pid}" title="Modifica">✏️</button>
+        <button type="button" class="del-btn" data-id="${pid}" title="Rimuovi">✕</button>
       </div>
     `;
     targetList.appendChild(item);
@@ -1405,8 +1516,9 @@ function renderCustomPlaces() {
   document.querySelectorAll('.view-place-link').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      const idx = parseInt(link.dataset.idx, 10);
-      const p = loadCustomPlaces()[idx];
+      const all = loadCustomPlaces();
+      const idx = all.findIndex(q => q.id === link.dataset.id);
+      const p = all[idx];
       if (!p) return;
       if (p.lat && p.lng) showOnMap(p.lat, p.lng, placePopupHtml(p, idx + 1));
       else focusAddressOnMap(p.address, p.name, link);
@@ -1415,20 +1527,16 @@ function renderCustomPlaces() {
 
   // Modifica
   document.querySelectorAll('.edit-place-btn').forEach(btn => {
-    btn.addEventListener('click', () => openPlaceModal(parseInt(btn.dataset.idx, 10)));
+    btn.addEventListener('click', () => openPlaceModal(btn.dataset.id));
   });
 
   // Rimozione
   document.querySelectorAll('.del-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const places = loadCustomPlaces();
-      const idx = parseInt(btn.dataset.idx, 10);
-      const p = places[idx];
+      const p = loadCustomPlaces().find(q => q.id === btn.dataset.id);
       if (!p) return;
       if (!confirm(`Eliminare "${p.name}"?`)) return;
-      places.splice(idx, 1);
-      saveCustomPlaces(places);
-      renderCustomPlaces();
+      dispatchOp({ t: 'delPlace', id: p.id });
     });
   });
 
@@ -1467,11 +1575,11 @@ async function geocodeAddress(address) {
 // ===== Finestra per aggiungere / modificare un luogo suggerito =====
 const modalOverlay = document.getElementById('add-modal-overlay');
 
-function openPlaceModal(idx) {
-  const isEdit = typeof idx === 'number';
-  const p = isEdit ? loadCustomPlaces()[idx] : null;
+function openPlaceModal(id) {
+  const isEdit = typeof id === 'string';
+  const p = isEdit ? loadCustomPlaces().find(q => q.id === id) : null;
   if (isEdit && !p) return;
-  editingPlaceIdx = isEdit ? idx : null;
+  editingPlaceId = isEdit ? id : null;
   document.getElementById('place-modal-title').textContent = isEdit ? '✏️ Modifica luogo' : '➕ Aggiungi un luogo suggerito da un amico';
   document.getElementById('place-submit-btn').textContent = isEdit ? 'Salva modifiche' : 'Aggiungi alla mappa';
   document.getElementById('place-name').value = p ? p.name : '';
@@ -1485,7 +1593,7 @@ function openPlaceModal(idx) {
 }
 function closePlaceModal() {
   modalOverlay.classList.remove('open');
-  editingPlaceIdx = null;
+  editingPlaceId = null;
 }
 
 document.getElementById('fab-add-btn').addEventListener('click', () => openPlaceModal());
@@ -1505,9 +1613,9 @@ document.getElementById('add-place-form').addEventListener('submit', async (e) =
   const notes = document.getElementById('place-notes').value.trim();
   if (!name || !address) return;
 
-  const editIdx = editingPlaceIdx;
-  const isEdit = editIdx !== null;
-  const oldPlace = isEdit ? loadCustomPlaces()[editIdx] : null;
+  const editId = editingPlaceId;
+  const isEdit = editId !== null;
+  const oldPlace = isEdit ? loadCustomPlaces().find(q => q.id === editId) : null;
   if (isEdit && !oldPlace) { closePlaceModal(); return; }
 
   submitBtn.disabled = true;
@@ -1524,16 +1632,13 @@ document.getElementById('add-place-form').addEventListener('submit', async (e) =
     }
   }
 
-  const places = loadCustomPlaces();
   const entry = {
     name, category, address, notes,
     lat: coords ? coords.lat : null,
     lng: coords ? coords.lng : null
   };
-  if (isEdit && places[editIdx]) places[editIdx] = entry;
-  else places.push(entry);
-  saveCustomPlaces(places);
-  renderCustomPlaces();
+  if (isEdit) dispatchOp({ t: 'setPlace', id: editId, set: entry });
+  else dispatchOp({ t: 'addPlace', place: { id: newId(), ...entry } });
 
   if (coords && map) {
     if (!isEdit) map.setView([coords.lat, coords.lng], 13);
@@ -1574,7 +1679,7 @@ function openStopModal(d, i) {
   const isEdit = typeof i === 'number';
   const s = isEdit ? days[d].stops[i] : null;
   if (isEdit && (!s || s.isBase)) return;
-  editingStop = { d, i: isEdit ? i : null };
+  editingStop = { d, id: isEdit ? s.id : null };
 
   const sel = document.getElementById('stop-day');
   sel.innerHTML = days.map((day, k) =>
@@ -1611,8 +1716,8 @@ stopModalOverlay.addEventListener('click', (e) => {
 document.getElementById('stop-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!editingStop) return;
-  const ctx = { d: editingStop.d, i: editingStop.i };
-  const isEdit = ctx.i !== null;
+  const ctx = { d: editingStop.d, id: editingStop.id };
+  const isEdit = ctx.id !== null;
   const btn = document.getElementById('stop-submit-btn');
 
   const name = document.getElementById('stop-name').value.trim();
@@ -1629,8 +1734,9 @@ document.getElementById('stop-form').addEventListener('submit', async (e) => {
     setStopStatus('Coordinate non valide. Usa il formato 38.1157, 13.3615', 'error');
     return;
   }
-  const orig = isEdit ? (days[ctx.d] && days[ctx.d].stops[ctx.i]) : null;
-  if (isEdit && (!orig || orig.isBase)) { closeStopModal(); return; }
+  const found = isEdit ? findStopById(ctx.id) : null;
+  const orig = found ? found.stop : null;
+  if (isEdit && !orig) { closeStopModal(); return; }   // eliminata nel frattempo da un altro telefono
 
   btn.disabled = true;
   let pos = null;
@@ -1653,109 +1759,23 @@ document.getElementById('stop-form').addEventListener('submit', async (e) => {
   }
 
   if (isEdit) {
-    Object.assign(orig, { name, lat: pos.lat, lng: pos.lng, notes });
-    if (parking) orig.parking = parking; else delete orig.parking;
-    if (food) orig.food = food; else delete orig.food;
-    if (targetDay !== ctx.d) {
-      days[ctx.d].stops.splice(ctx.i, 1);
-      insertStop(targetDay, orig);
-    }
+    const set = { name, lat: pos.lat, lng: pos.lng, notes };
+    const del = [];
+    if (parking) set.parking = parking; else del.push('parking');
+    if (food) set.food = food; else del.push('food');
+    dispatchOp({ t: 'setStop', id: ctx.id, set, del });
+    if (targetDay !== found.d) dispatchOp({ t: 'moveDay', id: ctx.id, day: targetDay });
   } else {
-    const stop = { name, lat: pos.lat, lng: pos.lng, notes };
+    const stop = { id: newId(), name, lat: pos.lat, lng: pos.lng, notes };
     if (parking) stop.parking = parking;
     if (food) stop.food = food;
-    insertStop(targetDay, stop);
+    dispatchOp({ t: 'addStop', day: targetDay, stop });
   }
-  saveDays();
-  refreshItinerary();
 
   btn.disabled = false;
   setStopStatus(isEdit ? '✅ Tappa aggiornata' : '✅ Tappa aggiunta', 'ok');
   setTimeout(() => { closeStopModal(); setStopStatus(''); }, 700);
 });
-
-// ===== Esporta / importa / ripristina =====
-function buildExport() {
-  let seeded = [];
-  try { seeded = JSON.parse(localStorage.getItem(STORAGE_KEY + '-seeded-names') || '[]'); } catch (e) { seeded = []; }
-  return {
-    app: 'itinerario-palermo',
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    days,
-    places: loadCustomPlaces(),
-    seededNames: seeded
-  };
-}
-
-async function exportData() {
-  const json = JSON.stringify(buildExport(), null, 2);
-  try {
-    const file = new File([json], 'itinerario-palermo.json', { type: 'application/json' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'Itinerario Palermo' });
-      return;
-    }
-  } catch (err) {
-    if (err && err.name === 'AbortError') return;   // l'utente ha chiuso il menu di condivisione
-  }
-  const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'itinerario-palermo.json';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-}
-
-function importData(file) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    let data;
-    try { data = JSON.parse(reader.result); } catch (e) { alert('File non valido.'); return; }
-    const placesOk = data && Array.isArray(data.places) && data.places.every(p =>
-      p && typeof p.name === 'string' && typeof p.address === 'string' && (p.category === 'visita' || p.category === 'cibo'));
-    if (!data || !daysAreValid(data.days) || !placesOk) {
-      alert('Questo file non sembra un itinerario di questa pagina.');
-      return;
-    }
-    if (!confirm('Importare questo file? Sostituirà itinerario e luoghi aggiunti presenti su questo dispositivo.')) return;
-    days = normalizeDays(data.days);
-    saveDays();
-    saveCustomPlaces(data.places.map(p => ({
-      name: p.name,
-      category: p.category,
-      address: p.address,
-      notes: typeof p.notes === 'string' ? p.notes : '',
-      lat: Number.isFinite(p.lat) ? p.lat : null,
-      lng: Number.isFinite(p.lng) ? p.lng : null
-    })));
-    localStorage.setItem(STORAGE_KEY + '-seeded-names', JSON.stringify(
-      Array.isArray(data.seededNames) ? data.seededNames : DEFAULT_PLACES.map(p => p.name)
-    ));
-    refreshItinerary();
-    renderCustomPlaces();
-    alert('Importato.');
-  };
-  reader.readAsText(file);
-}
-
-function resetItinerary() {
-  if (!confirm('Ripristinare l\'itinerario originale? Le modifiche alle tappe andranno perse (i luoghi aggiunti restano).')) return;
-  try { localStorage.removeItem(DAYS_KEY); } catch (e) { /* ignora */ }
-  days = cloneDefaultDays();
-  refreshItinerary();
-}
-
-document.getElementById('export-btn').addEventListener('click', exportData);
-document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
-document.getElementById('import-file').addEventListener('change', (e) => {
-  const file = e.target.files && e.target.files[0];
-  if (file) importData(file);
-  e.target.value = '';
-});
-document.getElementById('reset-btn').addEventListener('click', resetItinerary);
 
 // ===== Installazione come app (Android, iPhone, computer) =====
 let deferredInstallPrompt = null;
@@ -1827,7 +1847,7 @@ async function seedDefaultPlaces() {
   if (newOnes.length === 0) return;
   const places = loadCustomPlaces();
   newOnes.forEach(dp => {
-    places.push({ ...dp, lat: null, lng: null });
+    places.push({ id: placeIdFor(dp.name), ...dp, lat: null, lng: null });
     seededNames.add(dp.name);
   });
   saveCustomPlaces(places);
@@ -1835,31 +1855,280 @@ async function seedDefaultPlaces() {
 }
 
 // Geocodifica in sequenza i luoghi senza coordinate (rispettando i limiti di Nominatim).
-// Rilegge i luoghi salvati prima di ogni aggiornamento, così non cancella modifiche fatte nel frattempo.
+// Il risultato diventa un'operazione "coords": se un altro telefono ha già trovato il punto, non sovrascrive nulla.
 async function geocodeMissingCoords() {
   const snapshot = loadCustomPlaces();
   for (const p of snapshot) {
     if (p.lat && p.lng) continue;
     let coords = null;
     try { coords = await geocodeAddress(p.address); } catch (e) { /* ignora e prosegue */ }
-    if (coords) {
-      const current = loadCustomPlaces();
-      const target = current.find(q => q.name === p.name && q.address === p.address && !(q.lat && q.lng));
-      if (target) {
-        target.lat = coords.lat;
-        target.lng = coords.lng;
-        saveCustomPlaces(current);
-        renderCustomPlaces();
-      }
-    }
+    if (coords) dispatchOp({ t: 'coords', id: p.id, lat: coords.lat, lng: coords.lng });
     await new Promise(r => setTimeout(r, 1100)); // rispetta il limite di 1 richiesta/secondo
   }
 }
 
-// Carica i luoghi salvati all'avvio
+// ===== Sincronizzazione tra telefoni (server personale) =====
+// Ogni modifica è un'operazione: viene applicata subito in locale e messa in coda.
+// Quando c'è rete, l'app scarica la versione del server, ci riapplica le proprie operazioni
+// in coda e la salva (se nel frattempo qualcuno ha salvato, il server risponde 409 e si riprova).
+const SYNC_META_KEY = 'palermo-sync-meta';
+const SYNC_CODE_KEY = 'palermo-sync-codice';
+const SYNC_URL_KEY = 'palermo-sync-url';
+const SYNC_DEFAULT_URL = window.PALERMO_SYNC_URL || 'https://palermo.sintesiapp.it/api';
+const SYNC_POLL_MS = 30000;
+
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignora */ } }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { /* ignora */ } }
+
+function syncCode() { return lsGet(SYNC_CODE_KEY) || ''; }
+function syncUrl() { return (lsGet(SYNC_URL_KEY) || SYNC_DEFAULT_URL).replace(/\/+$/, ''); }
+function loadSyncMeta() {
+  try {
+    const m = JSON.parse(lsGet(SYNC_META_KEY));
+    if (m && Array.isArray(m.outbox)) return { rev: Number.isInteger(m.rev) ? m.rev : null, outbox: m.outbox };
+  } catch (e) { /* nessun dato */ }
+  return { rev: null, outbox: [] };
+}
+function saveSyncMeta(m) { lsSet(SYNC_META_KEY, JSON.stringify(m)); }
+
+// --- stato <-> documento condiviso ---
+function currentState() { return { days, places: loadCustomPlaces() }; }
+function stateToDoc(st) {
+  return {
+    days: st.days.map(d => ({ stops: d.stops.map(s => (s.isBase ? { isBase: true } : s)) })),
+    places: st.places
+  };
+}
+function docToState(doc) {
+  if (!doc || !Array.isArray(doc.days) || doc.days.length !== DEFAULT_DAYS.length || !Array.isArray(doc.places)) return null;
+  const okStop = s => s && (s.isBase || (typeof s.id === 'string' && typeof s.name === 'string' && Number.isFinite(s.lat) && Number.isFinite(s.lng)));
+  if (!doc.days.every(d => d && Array.isArray(d.stops) && d.stops.every(okStop))) return null;
+  const places = doc.places.filter(p => p && typeof p.id === 'string' && typeof p.name === 'string' && typeof p.address === 'string');
+  return {
+    days: DEFAULT_DAYS.map((d, i) => ({ ...d, stops: doc.days[i].stops.map(s => (s.isBase ? BASE : s)) })),
+    places
+  };
+}
+const clone = o => JSON.parse(JSON.stringify(o));
+
+// Mette lo stato in uso e lo ridisegna
+function adoptState(st) {
+  days = st.days;
+  saveDays();
+  saveCustomPlaces(st.places);
+  lsSet(STORAGE_KEY + '-seeded-names', JSON.stringify(DEFAULT_PLACES.map(dp => dp.name)));
+  refreshItinerary();
+  renderCustomPlaces();
+}
+
+// Punto d'ingresso di ogni modifica dell'utente
+function dispatchOp(op) {
+  const st = currentState();
+  applyOp(st, op);
+  adoptStateLocal(st, /Stop|moveDay/.test(op.t) ? 'days' : 'places');
+  if (syncCode()) {
+    const meta = loadSyncMeta();
+    meta.outbox.push(op);
+    saveSyncMeta(meta);
+    scheduleSync(600);
+  }
+}
+function adoptStateLocal(st, what) {
+  days = st.days;
+  if (what === 'days') { saveDays(); refreshItinerary(); }
+  else { saveCustomPlaces(st.places); renderCustomPlaces(); }
+}
+
+// --- rete ---
+async function syncApi(method, path, body) {
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), 10000) : null;
+  try {
+    const headers = { 'X-Codice': syncCode() };
+    if (body) headers['Content-Type'] = 'application/json';
+    const res = await fetch(syncUrl() + path, {
+      method, headers, cache: 'no-store',
+      body: body ? JSON.stringify(body) : undefined,
+      signal: ctrl ? ctrl.signal : undefined
+    });
+    let data = null;
+    try { data = await res.json(); } catch (e) { /* risposta vuota */ }
+    return { status: res.status, data };
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+let syncing = false;
+let syncAgain = false;
+let syncInfo = { kind: 'off', text: '' };   // off | ok | busy | wait | error
+let syncTimer = null;
+let syncFailures = 0;
+
+function scheduleSync(ms) {
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => { syncTimer = null; syncNow(); }, ms);
+}
+
+async function syncNow() {
+  if (!syncCode()) { setSyncInfo('off'); return; }
+  if (syncing) { syncAgain = true; return; }
+  syncing = true;
+  setSyncInfo('busy');
+  try {
+    let done = false;
+    for (let attempt = 0; attempt < 6 && !done; attempt++) {
+      const meta = loadSyncMeta();
+      const poll = meta.outbox.length === 0 && meta.rev !== null;
+      const r = await syncApi('GET', '/state' + (poll ? '?since=' + meta.rev : ''));
+      if (r.status === 401 || r.status === 429) throw Object.assign(new Error('auth'), { auth: r.status === 401 });
+      if (r.status !== 200 || !r.data) throw new Error('http ' + r.status);
+      if (r.data.unchanged) { done = true; break; }
+
+      // dallo stato letto qui non ci sono più "await" fino a quando non ho fissato quante operazioni invio
+      const outbox = loadSyncMeta().outbox;
+      const sent = outbox.length;
+      let cand;
+      if (r.data.doc) {
+        cand = docToState(clone(r.data.doc));
+        if (!cand) throw new Error('documento non valido');
+        outbox.forEach(op => applyOp(cand, op));
+      } else {
+        cand = clone(currentState());
+      }
+      const candDoc = stateToDoc(cand);
+      const firstLink = meta.rev === null;
+
+      if (r.data.doc && sent === 0) {
+        // niente da inviare: adotto la versione del server (se cambia davvero qualcosa)
+        if (JSON.stringify(candDoc) !== JSON.stringify(stateToDoc(currentState()))) {
+          if (firstLink) lsSet('palermo-backup-prima-sync', JSON.stringify({ days: lsGet(DAYS_KEY), places: lsGet(STORAGE_KEY) }));
+          adoptState(cand);
+        }
+        const m = loadSyncMeta(); m.rev = r.data.rev; saveSyncMeta(m);
+        done = true;
+        break;
+      }
+
+      const put = await syncApi('PUT', '/state', { baseRev: r.data.rev, doc: candDoc });
+      if (put.status === 409) continue;                       // qualcuno ha salvato prima di me: riprovo
+      if (put.status === 401) throw Object.assign(new Error('auth'), { auth: true });
+      if (put.status !== 200 || !put.data) throw new Error('http ' + put.status);
+
+      const m = loadSyncMeta();
+      m.outbox = m.outbox.slice(sent);
+      m.rev = put.data.rev;
+      saveSyncMeta(m);
+      if (r.data.doc && firstLink) lsSet('palermo-backup-prima-sync', JSON.stringify({ days: lsGet(DAYS_KEY), places: lsGet(STORAGE_KEY) }));
+      m.outbox.forEach(op => applyOp(cand, op));              // modifiche fatte mentre inviavo
+      if (JSON.stringify(stateToDoc(cand)) !== JSON.stringify(stateToDoc(currentState()))) adoptState(cand);
+      done = true;
+    }
+    if (!done) throw new Error('troppi conflitti');
+    syncFailures = 0;
+    setSyncInfo(loadSyncMeta().outbox.length ? 'wait' : 'ok');
+  } catch (e) {
+    if (e && e.auth) setSyncInfo('error', 'Codice non valido: ricontrolla il link o il codice.');
+    else {
+      syncFailures++;
+      setSyncInfo(loadSyncMeta().outbox.length ? 'wait' : 'error', 'Server non raggiungibile: riprovo appena possibile.');
+      scheduleSync(Math.min(5000 * Math.pow(2, syncFailures), 120000));
+    }
+  } finally {
+    syncing = false;
+    if (syncAgain) { syncAgain = false; scheduleSync(300); }
+  }
+}
+
+// --- interfaccia ---
+const syncBtn = document.getElementById('sync-btn');
+const syncOverlay = document.getElementById('sync-modal-overlay');
+function setSyncInfo(kind, text) {
+  syncInfo = { kind, text: text || '' };
+  const n = loadSyncMeta().outbox.length;
+  const labels = {
+    off: '☁️ Collega la sincronizzazione',
+    ok: '☁️ Sincronizzato',
+    busy: '☁️ Sincronizzo…',
+    wait: `☁️ ${n} modific${n === 1 ? 'a' : 'he'} in attesa`,
+    error: '⚠️ Sincronizzazione non attiva'
+  };
+  syncBtn.textContent = labels[kind] || labels.off;
+  syncBtn.className = 'sync-' + kind;
+  updateSyncModal();
+}
+function updateSyncModal() {
+  const linked = !!syncCode();
+  document.getElementById('sync-connect-box').style.display = linked ? 'none' : 'block';
+  document.getElementById('sync-linked-box').style.display = linked ? 'block' : 'none';
+  const t = document.getElementById('sync-status-text');
+  const n = loadSyncMeta().outbox.length;
+  t.textContent = !linked
+    ? 'Inserisci il codice del viaggio (o apri il link di invito) per condividere le modifiche con gli altri telefoni.'
+    : (syncInfo.text || { ok: 'Tutto sincronizzato con gli altri telefoni.', busy: 'Sincronizzazione in corso…',
+        wait: `${n} modifiche salvate sul telefono, verranno inviate appena c'è rete.`, error: '' }[syncInfo.kind] || '');
+  t.className = 'hint' + (syncInfo.kind === 'error' ? ' sync-err' : '');
+  document.getElementById('sync-invite-link').value = linked ? inviteLink() : '';
+}
+function inviteLink() {
+  const base = location.origin + location.pathname;
+  const custom = lsGet(SYNC_URL_KEY);
+  return base + '#c=' + encodeURIComponent(syncCode()) + (custom ? '&s=' + encodeURIComponent(custom) : '');
+}
+function linkWithCode(code, url) {
+  code = String(code || '').trim();
+  if (!code) return false;
+  lsSet(SYNC_CODE_KEY, code);
+  if (url) lsSet(SYNC_URL_KEY, url);
+  syncFailures = 0;
+  setSyncInfo('busy');
+  syncNow();
+  return true;
+}
+syncBtn.addEventListener('click', () => { updateSyncModal(); syncOverlay.classList.add('open'); });
+document.getElementById('sync-modal-close-btn').addEventListener('click', () => syncOverlay.classList.remove('open'));
+syncOverlay.addEventListener('click', (e) => { if (e.target === syncOverlay) syncOverlay.classList.remove('open'); });
+document.getElementById('sync-connect-btn').addEventListener('click', () => {
+  if (linkWithCode(document.getElementById('sync-code-input').value)) document.getElementById('sync-code-input').value = '';
+});
+document.getElementById('sync-now-btn').addEventListener('click', () => { syncFailures = 0; syncNow(); });
+document.getElementById('sync-disconnect-btn').addEventListener('click', () => {
+  if (!confirm('Scollegare questo telefono? Le modifiche non ancora inviate andranno perse; i dati sul telefono restano.')) return;
+  lsDel(SYNC_CODE_KEY); lsDel(SYNC_META_KEY);
+  setSyncInfo('off');
+});
+document.getElementById('sync-invite-btn').addEventListener('click', async () => {
+  const link = inviteLink();
+  const input = document.getElementById('sync-invite-link');
+  try {
+    if (navigator.share) { await navigator.share({ title: 'Itinerario Sicilia', url: link }); return; }
+    await navigator.clipboard.writeText(link);
+    input.value = link; input.select();
+    document.getElementById('sync-status-text').textContent = 'Link copiato: invialo a chi viaggia con te.';
+  } catch (e) { input.select(); }
+});
+
+// Link di invito: …/#c=CODICE (opzionale &s=indirizzo-server). Il codice viene salvato e tolto dall'indirizzo.
+(function readInvite() {
+  const m = /[#&]c=([^&]+)/.exec(location.hash || '');
+  if (!m) return;
+  const s = /[#&]s=([^&]+)/.exec(location.hash);
+  try { lsSet(SYNC_CODE_KEY, decodeURIComponent(m[1])); if (s) lsSet(SYNC_URL_KEY, decodeURIComponent(s[1])); } catch (e) { /* ignora */ }
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignora */ }
+})();
+
+// Quando aggiorna: ritorno in primo piano, rete tornata, e ogni 30 secondi mentre la pagina è visibile
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncNow(); });
+window.addEventListener('online', () => { syncFailures = 0; syncNow(); });
+setInterval(() => { if (document.visibilityState !== 'hidden' && navigator.onLine !== false) syncNow(); }, SYNC_POLL_MS);
+
+// Avvio: luoghi predefiniti, poi sincronizzazione, poi ricerca delle coordinate mancanti
 (async () => {
   await seedDefaultPlaces();
   renderCustomPlaces();
+  setSyncInfo(syncCode() ? (loadSyncMeta().outbox.length ? 'wait' : 'busy') : 'off');
+  if (syncCode()) { try { await syncNow(); } catch (e) { /* già gestito */ } }
   geocodeMissingCoords(); // in background, aggiorna la mappa man mano che trova le coordinate
 })();
 

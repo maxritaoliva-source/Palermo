@@ -1,6 +1,6 @@
 // Service worker: l'app si apre anche senza connessione (le tile della mappa
 // già visualizzate restano in cache; la ricerca di nuovi indirizzi richiede rete).
-const CACHE = 'palermo-itinerario-v5';
+const CACHE = 'palermo-itinerario-v6';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 // Librerie della mappa: salvate subito, così la pagina funziona offline anche al primo riavvio
 const CDN = [
@@ -40,6 +40,7 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.hostname.includes('nominatim')) return;           // ricerche indirizzi: sempre in rete
+  if (url.pathname.indexOf('/api/') !== -1) return;         // sincronizzazione: mai in cache
   e.respondWith(
     fetch(req)
       .then((res) => {
